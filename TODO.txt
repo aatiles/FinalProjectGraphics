@@ -1,0 +1,28 @@
+Ore Cart????
+    Create Cart
+    Kart Follows you like marbles
+    Display connection between you and kart with LINE_STRIP
+    Particle system is pulled with springs
+    Particle system pulls cart
+    Particle system collides with itsself
+Scene and Obsticles
+    Better Texture for:
+        Character
+        Skybox
+        Platform
+    Decide Obsticle texture
+    Create obsticle billboarding
+    Generate obsticles
+    Generate Obsticles without causing the player problems
+Add Blurr
+    Get FBO stuff working
+    Design blurr function
+Display Score Outside Command Line
+    Decide Scoring method
+    Display
+    Work on death screen
+    Game Reset Function
+    Have blur function receive inputs to animate
+Camera Movement smoother
+    Change camera direction with character movement
+
