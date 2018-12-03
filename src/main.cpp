@@ -612,9 +612,11 @@ void populateMarbles() {
 ////////////////////////////////////////////////////////////////////////////////
 void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
     glm::vec3 heading = marbles[0]->location - location;
-    direction = k*(glm::length(heading) - rest_length)*heading;
-    location = location + direction;
-
+    float mag = k*(glm::length(heading) - rest_length);
+    if (mag > 0){
+        direction = k*(glm::length(heading) - rest_length)*heading;
+        location = location + direction;
+    }
     // TODO TEXTURE CART
     glm::vec3 rotationAxis = glm::cross( direction, glm::vec3(0,1,0) );
 
@@ -672,7 +674,6 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
         }
         marbles[i]->draw( m, uniform_m_modelMtx_loc, uniform_m_color_loc );
     }
-
     drawOreKart( m, uniform_modelMtx_loc, uniform_m_color_loc);
 }
 
