@@ -85,12 +85,21 @@ GLint numMarbles = 4;
 float bump = 0.1;
 float start = 8;
 
+//OreKart Variables
+glm::vec3 OKlocation(0,0,0);
+glm::vec3 OKdirection;
+GLfloat OK_rotation = 0;
+GLfloat OKradius = 1;
+GLfloat OKk = 0.1;
+GLfloat OKrest_length = 5.0;
+
+
 // Movement Variables
 int goingForward = 0;
 int goingBackward = 0;
 int turnLeft = 0;
 int turnRight = 0;
-float speedRatio = 0.77;
+float speedRatio = 1.0;
 
 // System Time
 float sys_time = 0;
@@ -601,6 +610,30 @@ void populateMarbles() {
 //        This method will contain all of the objects to be drawn.
 //
 ////////////////////////////////////////////////////////////////////////////////
+void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
+    glm::vec3 heading = marbles[0]->location - OKlocation;
+    float mag = OKk*(glm::length(heading) - OKrest_length);
+    if (mag > 0){
+        OKdirection = OKk*(glm::length(heading) - OKrest_length)*heading;
+        OKlocation = OKlocation + OKdirection;
+    }
+    // TODO TEXTURE CART
+    glm::vec3 rotationAxis = glm::cross( OKdirection, glm::vec3(0,1,0) );
+
+    modelMtx = glm::translate( modelMtx, OKlocation );
+    modelMtx = glm::translate( modelMtx, glm::vec3( 0, OKradius, 0 ) );
+    modelMtx = glm::rotate( modelMtx, (float)OK_rotation, rotationAxis );
+    glUniformMatrix4fv( uniform_modelMtx_loc, 1, GL_FALSE, &modelMtx[0][0] );
+
+    CSCI441::drawSolidCube(1);
+    //TODO Four Wheels
+    // drawLeftFrontWheel();
+    // drawRightWheel();
+    // drawLeftBackWheel();
+    // drawRightBackWheel();
+}
+
+
 void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
     // Draw Scenery
     textureShaderProgram->useProgram();
@@ -641,6 +674,7 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
         }
         marbles[i]->draw( m, uniform_m_modelMtx_loc, uniform_m_color_loc );
     }
+    drawOreKart( m, uniform_modelMtx_loc, uniform_m_color_loc);
 }
 
 glm::vec3 collide(glm::vec3 vec_in, glm::vec3 norm){
@@ -778,6 +812,22 @@ void collideMarblesWithEachother() {
         }
     }
 
+    //Collide OreKart
+    for (int i = 0; i < numMarbles; i++){
+        float dist = glm::distance( 
+                            glm::vec3(  marbles[i]->location.x,
+                                        marbles[i]->radius,
+                                        marbles[i]->location.z),
+                            glm::vec3(  OKlocation.x,
+                                        OKradius,
+                                        OKlocation.z));
+        if ( dist < marbles[i]->radius + OKradius ){
+            marbles[i]->direction = collide(marbles[i]->direction, marbles[i]->location - OKlocation);
+            marbles[i]->location =  marbles[i]->location
+                + bump*glm::normalize(marbles[i]->location - OKlocation);
+        }
+    }
+
 }
 
 ///*****************************************************************************
@@ -805,7 +855,7 @@ int main( int argc, char *argv[] ) {
     CSCI441::drawSolidSphere( 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
     CSCI441::drawSolidCylinder( 1, 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
     CSCI441::drawSolidTorus( 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
-
+    CSCI441::drawSolidCube(1);
     //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
     //    until the user decides to close the window and quit the program.  Without a loop, the
     //    window will display once and then the program exits.
