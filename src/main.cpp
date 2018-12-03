@@ -86,12 +86,12 @@ float bump = 0.1;
 float start = 8;
 
 //OreKart Variables
-glm::vec3 location(0,0,0);
-glm::vec3 direction;
-GLfloat _rotation = 0;
-GLfloat radius = 1;
-GLfloat k = 0.1;
-GLfloat rest_length = 3.0;
+glm::vec3 OKlocation(0,0,0);
+glm::vec3 OKdirection;
+GLfloat OK_rotation = 0;
+GLfloat OKradius = 1;
+GLfloat OKk = 0.1;
+GLfloat OKrest_length = 5.0;
 
 
 // Movement Variables
@@ -99,7 +99,7 @@ int goingForward = 0;
 int goingBackward = 0;
 int turnLeft = 0;
 int turnRight = 0;
-float speedRatio = 0.77;
+float speedRatio = 1.0;
 
 // System Time
 float sys_time = 0;
@@ -611,18 +611,18 @@ void populateMarbles() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
-    glm::vec3 heading = marbles[0]->location - location;
-    float mag = k*(glm::length(heading) - rest_length);
+    glm::vec3 heading = marbles[0]->location - OKlocation;
+    float mag = OKk*(glm::length(heading) - OKrest_length);
     if (mag > 0){
-        direction = k*(glm::length(heading) - rest_length)*heading;
-        location = location + direction;
+        OKdirection = OKk*(glm::length(heading) - OKrest_length)*heading;
+        OKlocation = OKlocation + OKdirection;
     }
     // TODO TEXTURE CART
-    glm::vec3 rotationAxis = glm::cross( direction, glm::vec3(0,1,0) );
+    glm::vec3 rotationAxis = glm::cross( OKdirection, glm::vec3(0,1,0) );
 
-    modelMtx = glm::translate( modelMtx, location );
-    modelMtx = glm::translate( modelMtx, glm::vec3( 0, radius, 0 ) );
-    modelMtx = glm::rotate( modelMtx, (float)_rotation, rotationAxis );
+    modelMtx = glm::translate( modelMtx, OKlocation );
+    modelMtx = glm::translate( modelMtx, glm::vec3( 0, OKradius, 0 ) );
+    modelMtx = glm::rotate( modelMtx, (float)OK_rotation, rotationAxis );
     glUniformMatrix4fv( uniform_modelMtx_loc, 1, GL_FALSE, &modelMtx[0][0] );
 
     CSCI441::drawSolidCube(1);
@@ -809,6 +809,22 @@ void collideMarblesWithEachother() {
                                             + bump*glm::normalize(marbles[j]->location - marbles[i]->location);
                 }
             }
+        }
+    }
+
+    //Collide OreKart
+    for (int i = 0; i < numMarbles; i++){
+        float dist = glm::distance( 
+                            glm::vec3(  marbles[i]->location.x,
+                                        marbles[i]->radius,
+                                        marbles[i]->location.z),
+                            glm::vec3(  OKlocation.x,
+                                        OKradius,
+                                        OKlocation.z));
+        if ( dist < marbles[i]->radius + OKradius ){
+            marbles[i]->direction = collide(marbles[i]->direction, marbles[i]->location - OKlocation);
+            marbles[i]->location =  marbles[i]->location
+                + bump*glm::normalize(marbles[i]->location - OKlocation);
         }
     }
 
