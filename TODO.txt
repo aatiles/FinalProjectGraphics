@@ -15,6 +15,8 @@ Scene and Obsticles
     +Create obsticle billboarding
     +Generate obsticles
     +Generate Obsticles without causing the player problems
+    +Fix enemy generation to not be on hero
+    +more "interesting" beverage spawns
 Add Blurr
     +Get FBO stuff working
     +Design blurr function
