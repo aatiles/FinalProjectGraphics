@@ -1,7 +1,7 @@
 /*
  *  CSCI 441, Computer Graphics, Fall 2017
  *
- *  Project: lab11
+ *  Project: FINAL PROJECT
  *  File: main.cpp
  *
  *  Description:
@@ -370,7 +370,7 @@ void setupTextures() {
 
     beverageTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/coors-b.png" );
     playerTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/Mines.jpg" );
-    enemyTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/Police.png" );
+    enemyTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.jpg" );
 }
 
 void setupShaders() {
