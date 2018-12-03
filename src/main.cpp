@@ -85,6 +85,15 @@ GLint numMarbles = 4;
 float bump = 0.1;
 float start = 8;
 
+//OreKart Variables
+glm::vec3 location(0,0,0);
+glm::vec3 direction;
+GLfloat _rotation = 0;
+GLfloat radius = 1;
+GLfloat k = 0.1;
+GLfloat rest_length = 3.0;
+
+
 // Movement Variables
 int goingForward = 0;
 int goingBackward = 0;
@@ -602,12 +611,11 @@ void populateMarbles() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
-    // TODO TEXTURE CART
-    glm::vec3 location(0,0,0);
-    glm::vec3 direction(1,0,1);
-    GLfloat _rotation = 0;
-    GLfloat radius = 1;
+    glm::vec3 heading = marbles[0]->location - location;
+    direction = k*(glm::length(heading) - rest_length)*heading;
+    location = location + direction;
 
+    // TODO TEXTURE CART
     glm::vec3 rotationAxis = glm::cross( direction, glm::vec3(0,1,0) );
 
     modelMtx = glm::translate( modelMtx, location );
@@ -702,7 +710,7 @@ void moveMarbles() {
         glm::vec3 target_head = glm::normalize(marbles[0]->location - marbles[i]->location);
         float epsilon = 0.01;
         GLfloat angle = 0;
-        if (glm::length(cur_dir -m, uniform_m_modelMtx_loc, uniform_m_color_loc){ target_head) > epsilon){
+        if (glm::length(cur_dir - target_head) > epsilon){
             angle = glm::acos(glm::dot(cur_dir, target_head));
         }
         angle *= -0.1;
