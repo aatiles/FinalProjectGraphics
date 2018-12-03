@@ -601,6 +601,29 @@ void populateMarbles() {
 //        This method will contain all of the objects to be drawn.
 //
 ////////////////////////////////////////////////////////////////////////////////
+void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
+    // TODO TEXTURE CART
+    glm::vec3 location(0,0,0);
+    glm::vec3 direction(1,0,1);
+    GLfloat _rotation = 0;
+    GLfloat radius = 1;
+
+    glm::vec3 rotationAxis = glm::cross( direction, glm::vec3(0,1,0) );
+
+    modelMtx = glm::translate( modelMtx, location );
+    modelMtx = glm::translate( modelMtx, glm::vec3( 0, radius, 0 ) );
+    modelMtx = glm::rotate( modelMtx, (float)_rotation, rotationAxis );
+    glUniformMatrix4fv( uniform_modelMtx_loc, 1, GL_FALSE, &modelMtx[0][0] );
+
+    CSCI441::drawSolidCube(1);
+    //TODO Four Wheels
+    // drawLeftFrontWheel();
+    // drawRightWheel();
+    // drawLeftBackWheel();
+    // drawRightBackWheel();
+}
+
+
 void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
     // Draw Scenery
     textureShaderProgram->useProgram();
@@ -641,6 +664,8 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
         }
         marbles[i]->draw( m, uniform_m_modelMtx_loc, uniform_m_color_loc );
     }
+
+    drawOreKart( m, uniform_modelMtx_loc, uniform_m_color_loc);
 }
 
 glm::vec3 collide(glm::vec3 vec_in, glm::vec3 norm){
@@ -677,7 +702,7 @@ void moveMarbles() {
         glm::vec3 target_head = glm::normalize(marbles[0]->location - marbles[i]->location);
         float epsilon = 0.01;
         GLfloat angle = 0;
-        if (glm::length(cur_dir - target_head) > epsilon){
+        if (glm::length(cur_dir -m, uniform_m_modelMtx_loc, uniform_m_color_loc){ target_head) > epsilon){
             angle = glm::acos(glm::dot(cur_dir, target_head));
         }
         angle *= -0.1;
@@ -805,7 +830,7 @@ int main( int argc, char *argv[] ) {
     CSCI441::drawSolidSphere( 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
     CSCI441::drawSolidCylinder( 1, 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
     CSCI441::drawSolidTorus( 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
-
+    CSCI441::drawSolidCube(1);
     //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
     //    until the user decides to close the window and quit the program.  Without a loop, the
     //    window will display once and then the program exits.
