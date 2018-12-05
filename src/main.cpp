@@ -400,13 +400,13 @@ void setupShaders() {
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
 	/*
 	blurShaderProgram = new CSCI441::ShaderProgram( "shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl" );
-	uniform_m_tex_loc            = textureShaderProgram->getUniformLocation( "tex" );
-	uniform_m_color_loc          = textureShaderProgram->getUniformLocation( "color" );
-								 = textureShaderProgram->getUniformLocation("dir");
-								 = textureShaderProgram->getUniformLocation("radius");
-							     = textureShaderProgram->getUniformLocation("rez");
-	attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
-	attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
+	uniform_blur_tex_loc            = textureShaderProgram->getUniformLocation( "tex" );
+	uniform_blur_color_loc          = textureShaderProgram->getUniformLocation( "color" );
+	uniform_blur_dir_loc    	 = textureShaderProgram->getUniformLocation("dir");
+	uniform_blur_radius_loc		 = textureShaderProgram->getUniformLocation("radius");
+	uniform_blur_rez_loc	     = textureShaderProgram->getUniformLocation("rez");
+	attrib_blur_vPos_loc            = textureShaderProgram->getAttributeLocation( "vPos" );
+	attrib_blur_vTextureCoord_loc   = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
 	*/
 }
 
