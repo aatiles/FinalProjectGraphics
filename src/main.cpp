@@ -814,6 +814,7 @@ void moveMarbles() {
             angle = glm::acos(glm::dot(cur_dir, target_head));
         }
         angle *= -0.1;
+        if (glm::cross(cur_dir, target_head).y < 0) angle *= -1;
         //printf("Angle %f\n",angle);
         glm::mat4 rotationMat(1); // Creates a identity matri
         rotationMat = glm::rotate(rotationMat, angle, glm::vec3(0.0, 1.0, 0.0));
