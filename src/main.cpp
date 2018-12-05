@@ -398,17 +398,7 @@ void setupShaders() {
     uniform_m_color_loc             = textureShaderProgram->getUniformLocation( "color" );
     attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
-	/*
-	blurShaderProgram = new CSCI441::ShaderProgram( "shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl" );
-	uniform_blur_tex_loc            = textureShaderProgram->getUniformLocation( "tex" );
-	uniform_blur_color_loc          = textureShaderProgram->getUniformLocation( "color" );
-	uniform_blur_dir_loc    	 = textureShaderProgram->getUniformLocation("dir");
-	uniform_blur_radius_loc		 = textureShaderProgram->getUniformLocation("radius");
-	uniform_blur_rez_loc	     = textureShaderProgram->getUniformLocation("rez");
-	attrib_blur_vPos_loc            = textureShaderProgram->getAttributeLocation( "vPos" );
-	attrib_blur_vTextureCoord_loc   = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
-	*/
-}
+	}
 
 // setupBuffers() //////////////////////////////////////////////////////////////
 //
@@ -453,6 +443,20 @@ void setupBuffers() {
 
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbods[1] );
     glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( platformIndices ), platformIndices, GL_STATIC_DRAW );
+	//DUMPED CODE FOR BLUR
+	/*
+	blurShaderProgram = new CSCI441::ShaderProgram( "shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl" );
+	uniform_blur_tex_loc            = textureShaderProgram->getUniformLocation( "tex" );
+	uniform_blur_color_loc          = textureShaderProgram->getUniformLocation( "color" );
+	uniform_blur_dir_loc    	 = textureShaderProgram->getUniformLocation("dir");
+	uniform_blur_radius_loc		 = textureShaderProgram->getUniformLocation("radius");
+	uniform_blur_rez_loc	     = textureShaderProgram->getUniformLocation("rez");
+	attrib_blur_vPos_loc            = textureShaderProgram->getAttributeLocation( "vPos" );
+	attrib_blur_vTextureCoord_loc   = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
+	*/
+
+	//blurTagrgetA = new FrameBuffer(FBO_SIZE, FBO_SIZE, Texture.LINEAR);
+	//blurTagrgetB = new FrameBuffer(FBO_SIZE, FBO_SIZE, Texture.LINEAR);
 
     //////////////////////////////////////////
     //
@@ -572,6 +576,34 @@ void setupBuffers() {
   glEnableVertexAttribArray(attrib_vTextureCoord_loc);
   glVertexAttribPointer(attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3));
 }
+/*
+void setupFramebuffer() {
+// TODO #1 - Setup everything with the framebuffer
+glGenFramebuffers(1, &fbo);
+glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+GLuint rbo;
+glGenRenderbuffers(1, &rbo);
+glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, framebufferWidth, framebufferHeight);
+glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,	rbo);
+
+glGenTextures(1, &framebufferTextureHandle);
+glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,	framebufferWidth, framebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTextureHandle, 0);
+CSCI441::FramebufferUtils::printFramebufferStatusMessage(GL_FRAMEBUFFER);
+CSCI441::FramebufferUtils::printFramebufferInfo(GL_FRAMEBUFFER, fbo);
+
+}
+*/
+
 
 void populateMarbles() {
     srand( time(NULL) );
@@ -740,7 +772,7 @@ void moveMarbles() {
 }
 
 void collideMarblesWithWall() {
-    // TODO #2 checki-- if any ball passes beyond any wall
+    // TODO #2 checking if any ball passes beyond any wall
     // Player Falls
     for (int i = 0; i < numMarbles; i++){
         if (marbles[i]->location.z < -groundSize
@@ -873,7 +905,42 @@ int main( int argc, char *argv[] ) {
         glDrawBuffer( GL_BACK );                // work with our back frame buffer
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );    // clear the current color contents and depth buffer in the window
 
-        // Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
+		/*
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glViewport(0, 0, framebufferWidth, framebufferHeight);
+		glClear(GL_COLOR_BUFFER_BIT |
+		GL_DEPTH_BUFFER_BIT);    // clear the current color contents and depth buffer in the framebuffer
+
+		// set the projection matrix based on the window size
+		// use a perspective projection that ranges
+		// with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
+		glm::mat4 projectionMatrix = glm::perspective(45.0f, framebufferWidth / (float)framebufferHeight, 0.001f, 100.0f);
+
+		// set up our look at matrix to position our camera
+		glm::mat4 viewMatrix = glm::lookAt(eyePoint, lookAtPoint, upVector);
+
+		// pass our view and projection matrices
+		renderScene(viewMatrix, projectionMatrix);
+		//postprocessingShaderProgram->useProgram();
+		glFlush();
+		/////////////////////////////
+		// SECOND PASS
+		/////////////////////////////
+		// TODO #3
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// Show it all on the screen now!
+		glViewport(0, 0, windowWidth, windowHeight);
+		glClear(GL_COLOR_BUFFER_BIT |
+		GL_DEPTH_BUFFER_BIT);    // clear the current color contents and depth buffer in the framebuffer
+		postprocessingShaderProgram->useProgram();
+		projectionMatrix = glm::ortho(-1, 1, -1, 1);
+		glUniformMatrix4fv(uniform_post_proj_loc, 1, GL_FALSE, &projectionMatrix[0][0]);
+		glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
+		glBindVertexArray(texturedQuadVAO);
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
+		*/
+
+		// Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
         // when using a Retina display the actual window can be larger than the requested window.  Therefore
         // query what the actual size of the window we are rendering to is.
         glfwGetFramebufferSize( window, &windowWidth, &windowHeight );
