@@ -57,6 +57,10 @@ float cameraDis = 0.5;
 
 
 // Platform Variables
+struct VertexTextured {
+    float x, y, z;
+    float s, t;
+};
 GLuint platformVAOd;
 GLuint platformTextureHandle;
 GLfloat groundSize = 13;
@@ -83,7 +87,7 @@ std::vector< Marble* > marbles;
 GLfloat marbleRadius = 0.3;
 GLint numMarbles = 4;
 float bump = 0.1;
-float start = 8;
+glm::vec3 marbleStart = glm::vec3(8,0,8);
 
 //OreKart Variables
 glm::vec3 OKlocation(0,0,0);
@@ -93,13 +97,19 @@ GLfloat OKradius = 1;
 GLfloat OKk = 0.1;
 GLfloat OKrest_length = 5.0;
 
+// Rope Variables
+GLuint ropeVAOd;
+GLuint ropeTextureHandle;
+GLuint ropeVbod;
+const int ropeSize = 2;
+VertexTextured ropeVertices[ropeSize];
 
 // Movement Variables
 int goingForward = 0;
 int goingBackward = 0;
 int turnLeft = 0;
 int turnRight = 0;
-float speedRatio = 1.0;
+float speedRatio = 0.3;
 
 // System Time
 float sys_time = 0;
@@ -379,7 +389,8 @@ void setupTextures() {
 
     beverageTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/coors-b.png" );
     playerTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/Mines.jpg" );
-    enemyTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.jpg" );
+    enemyTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
+    ropeTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/rope.png" );
 }
 
 void setupShaders() {
@@ -406,10 +417,6 @@ void setupShaders() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void setupBuffers() {
-    struct VertexTextured {
-        float x, y, z;
-        float s, t;
-    };
 
     //////////////////////////////////////////
     //
@@ -561,6 +568,32 @@ void setupBuffers() {
   glVertexAttribPointer(attrib_vPos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) 0);
   glEnableVertexAttribArray(attrib_vTextureCoord_loc);
   glVertexAttribPointer(attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3));
+
+    //////////////////////////////////////////
+    //
+    // ROPE
+    glm::vec3 begin = marbleStart;
+    glm::vec3 end = OKlocation;
+    for (int i = 0; i < ropeSize; i++){
+        float a = i/(float) ropeSize;
+        ropeVertices[i] = {a*begin.x + (1-a)*end.x, 1.0, a*begin.z + (1-a)*end.z, i%2, i%2};
+    }
+
+    glGenVertexArrays( 1, &ropeVAOd );
+    glBindVertexArray( ropeVAOd );
+
+    glGenBuffers( 1, &ropeVbod);
+    glBindBuffer( GL_ARRAY_BUFFER, ropeVbod );
+    glBufferData( GL_ARRAY_BUFFER, sizeof( ropeVertices ), ropeVertices, GL_STREAM_DRAW );
+    glEnableVertexAttribArray( attrib_vPos_loc );
+    glVertexAttribPointer( attrib_vPos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) 0 );
+    glEnableVertexAttribArray( attrib_vTextureCoord_loc );
+    glVertexAttribPointer( attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3) );
+
+}
+
+float randRange(float min, float max){
+    return rand()/(float) RAND_MAX * (max-min) + min;
 }
 
 void populateMarbles() {
@@ -577,19 +610,25 @@ void populateMarbles() {
         marbles.push_back( m );
     }
     // Our Hero
-    marbles[0]->location    = glm::vec3(start,0,start);
+    marbles[0]->location    = marbleStart;
     marbles[0]->direction   = glm::vec3(-1,0,-1);
     marbles[0]->radius      = 0.5;
     // First Goal
-    marbles[1]->location    = glm::vec3(-start,0, start);
+    marbles[1]->location    = glm::vec3(randRange(-groundSize, groundSize),
+                                        0,
+                                        randRange(-groundSize, groundSize));
     marbles[1]->radius      = 0.5;
     marbles[1]->type        = 1;
     // Second Goal
-    marbles[2]->location    = glm::vec3(-start,1000,-start);
+    marbles[1]->location    = glm::vec3(randRange(-groundSize, groundSize),
+                                        1000,
+                                        randRange(-groundSize, groundSize));
     marbles[2]->radius      = 0.5;
     marbles[2]->type        = 1;
     // Third Goal
-    marbles[3]->location    = glm::vec3(start,1000,-start);
+    marbles[3]->location    = glm::vec3(randRange(-groundSize, groundSize),
+                                        1000,
+                                        randRange(-groundSize, groundSize));
     marbles[3]->radius      = 0.5;
     marbles[3]->type        = 1;
     printf("Num Marbles %d. Expected %d\n", numMarbles, marbles.size());
@@ -633,6 +672,16 @@ void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_c
     // drawRightBackWheel();
 }
 
+void moveRope(){
+    glm::vec3 heroLoc = marbles[0]->location;
+    ropeVertices[0].x = heroLoc.x;
+    ropeVertices[0].y = marbles[0]->radius;
+    ropeVertices[0].z = heroLoc.z;
+
+    ropeVertices[ropeSize - 1].x = OKlocation.x;
+    ropeVertices[ropeSize - 1].z = OKlocation.z;
+
+}
 
 void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
     // Draw Scenery
@@ -651,13 +700,21 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
         glBindVertexArray(skyboxVAOds[i]);
         glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
     }
-
+    // Platform
     glBindTexture( GL_TEXTURE_2D, platformTextureHandle );
     glBindVertexArray( platformVAOd );
     glDrawElements( GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0 );
-    marbleShaderProgram -> useProgram();
+
+    // Rope
+    glBindVertexArray( ropeVAOd );
+    glBindBuffer( GL_ARRAY_BUFFER, ropeVbod );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(ropeVertices), ropeVertices);
+    glBindTexture( GL_TEXTURE_2D, ropeTextureHandle);
+    //glDrawElements( GL_LINE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0 );
+    glDrawArrays( GL_LINE_STRIP, 0, ropeSize);
 
     // Draw Marbles
+    marbleShaderProgram -> useProgram();
     glUniformMatrix4fv(uniform_m_modelMtx_loc, 1, GL_FALSE, &m[0][0]);
     glUniformMatrix4fv(uniform_m_viewProjetionMtx_loc, 1, GL_FALSE, &vp[0][0]);
     glUniform1ui(uniform_m_tex_loc, GL_TEXTURE0);
@@ -727,6 +784,8 @@ void moveMarbles() {
     for (int i = 1; i < 4; i++){
         marbles[i]->radius = 0.5 + 0.3*sin(sys_time);
     }
+
+    moveRope();
 }
 
 void collideMarblesWithWall() {
@@ -772,14 +831,16 @@ void collideMarblesWithEachother() {
             if (i < 4){
                 int nextMarble = (i)%3 + 1;
                 marbles[i]->location.y = 1000;
-                marbles[nextMarble]->location.y = 0;
+                marbles[nextMarble]->location = glm::vec3(  randRange(-groundSize, groundSize),
+                                                            0,
+                                                            randRange(-groundSize, groundSize));
                 if ( i == 3 || numMarbles > 6){
                     glm::vec3 loc = marbles[i]->location;
                     Marble* m = new Marble( glm::vec3((2*rand()/(float)RAND_MAX - 1)*groundSize, 0,(2*rand()/(float)RAND_MAX-1)*groundSize),
                                             glm::vec3( rand()/(float)RAND_MAX, 0.0, rand()/(float)RAND_MAX ),
                                             marbleRadius );
                     marbles.push_back( m );
-                    numMarbles += 1;
+                    numMarbles++;
                     printf("Level %d Unocked at %f %f %f\n", numMarbles - 4, m->location.x, m->location.y, m->location.z);
                 }
             }
