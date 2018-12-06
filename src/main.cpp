@@ -121,6 +121,7 @@ int turnRight = 0;
 float speedRatio = 0.3;
 float speedIncrease = 0.1;
 
+
 //FBO Stuff
 GLuint fbo;
 int framebufferWidth = 1024, framebufferHeight = 1024;
@@ -131,6 +132,8 @@ GLint uniform_post_proj_loc, uniform_post_fbo_loc;
 GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
 
 GLuint texturedQuadVAO;
+
+
 // System Time
 float sys_time = 0;
 
