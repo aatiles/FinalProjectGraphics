@@ -995,6 +995,7 @@ int main( int argc, char *argv[] ) {
     //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
     //    until the user decides to close the window and quit the program.  Without a loop, the
     //    window will display once and then the program exits.
+    double last_update  = glfwGetTime();
     while( !glfwWindowShouldClose(window) ) {    // check if the window was instructed to be closed
         glDrawBuffer( GL_BACK );                // work with our back frame buffer
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );    // clear the current color contents and depth buffer in the window
@@ -1061,9 +1062,12 @@ int main( int argc, char *argv[] ) {
         glfwPollEvents();                // check for any events and signal to redraw screen
 
         // THIS IS WHERE THE MAGICAL MAGIC HAPPENS!  Move everything
-        collideMarblesWithWall();
-        collideMarblesWithEachother();
-        moveMarbles();
+        if (glfwGetTime() - last_update > 0.016) {
+            last_update = glfwGetTime();
+            collideMarblesWithWall();
+            collideMarblesWithEachother();
+            moveMarbles();
+        }
     }
 
     glfwDestroyWindow( window );// clean up and close our window
