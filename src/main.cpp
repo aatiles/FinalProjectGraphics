@@ -100,6 +100,8 @@ int goingBackward = 0;
 int turnLeft = 0;
 int turnRight = 0;
 float speedRatio = 1.0;
+
+
 //FBO Stuff
 GLuint fbo;
 int framebufferWidth = 1024, framebufferHeight = 1024;
@@ -110,6 +112,8 @@ GLint uniform_post_proj_loc, uniform_post_fbo_loc;
 GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
 
 GLuint texturedQuadVAO;
+
+
 // System Time
 float sys_time = 0;
 
@@ -931,6 +935,7 @@ int main( int argc, char *argv[] ) {
     setupShaders();                                        // load our shaders into memory
     setupBuffers();                                        // load all our VAOs and VBOs into memory
     setupTextures();                                    // load all textures into memory
+    setupFramebuffer();
     populateMarbles();                                // generate marbles
 
     convertSphericalToCartesian();        // set up our camera position
@@ -982,7 +987,7 @@ int main( int argc, char *argv[] ) {
 		glUniformMatrix4fv(uniform_post_proj_loc, 1, GL_FALSE, &projectionMatrix[0][0]);
 		glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
 		glBindVertexArray(texturedQuadVAO);
-		//glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
 
 		// Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
         // when using a Retina display the actual window can be larger than the requested window.  Therefore
