@@ -101,12 +101,12 @@ GLfloat OKrest_length = 5.0;
 GLuint ropeVAOd;
 GLuint ropeTextureHandle;
 GLuint ropeVbod;
-const int ropeSize = 3;
+const int ropeSize = 20;
 VertexTextured ropeVertices[ropeSize];
-float ropeMass = 0.1;
-float ropeK = 0.1;
-float ropeRest = OKrest_length/(float) (ropeSize - 1)
-
+float ropeMass = 0.001;
+float ropeK = 100.0;
+float ropeRest = 0.07*OKrest_length/(float) (ropeSize - 1);
+float ropeTimeScale = 0.3;
 // Movement Variables
 int goingForward = 0;
 int goingBackward = 0;
@@ -721,7 +721,7 @@ void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_c
 glm::vec3 spring(float k, float rest, glm::vec3 source, glm::vec3 dest){
     glm::vec3 dir = dest-source;
     float dist = glm::length(dir);
-    return k*(dist-length)*dir;
+    return k*(dist-rest)*dir;
 }
 
 void moveRope(){
@@ -733,7 +733,7 @@ void moveRope(){
     ropeVertices[ropeSize - 1].x = OKlocation.x;
     ropeVertices[ropeSize - 1].z = OKlocation.z;
 
-    glm::vec3 g = ropeMass*-9.81*glm::vec3(0,-1,0);
+    glm::vec3 g = glm::vec3(0,ropeMass*-9.81,0);
     for (int i = 1; i < ropeSize-1; i++){
         VertexTextured r1 = ropeVertices[i-1];
         VertexTextured r2 = ropeVertices[i];
@@ -741,9 +741,18 @@ void moveRope(){
         glm::vec3 f1 = spring(ropeK, ropeRest, glm::vec3(r2.x, r2.y, r2.z), glm::vec3(r1.x, r1.y, r1.z));
         glm::vec3 f2 = spring(ropeK, ropeRest, glm::vec3(r2.x, r2.y, r2.z), glm::vec3(r3.x, r3.y, r3.z));
         glm::vec3 sumF = g + f1 + f2;
-        ropeVertices[i].x += sumF.x;
-        ropeVertices[i].y += sumF.y;
-        ropeVertices[i].z += sumF.z;
+        sumF = glm::normalize(sumF);
+        ropeVertices[i].x += sumF.x * ropeTimeScale;
+        ropeVertices[i].y += sumF.y * ropeTimeScale;
+        if (ropeVertices[i].y < 0){
+            ropeVertices[i].y = 0;
+        }
+        ropeVertices[i].z += sumF.z * ropeTimeScale;
+        /*
+        if (i == 1){
+            printf("Rope 1 %f %f %f\n", ropeVertices[1].x, ropeVertices[1].y, ropeVertices[1].z);
+            printf("Force 1 %f %f %f\n", sumF.x, sumF.y, sumF.z);
+        }*/
     }
 }
 
@@ -869,6 +878,7 @@ void collideMarblesWithWall() {
     if (marbles[0]->location.y < -3){
         printf("Game over at level %d\n", numMarbles - 4);
         printf("You survived %f seconds", sys_time);
+        printf("Rope Rest: %f\n",ropeRest);
         exit(EXIT_SUCCESS);
     }
 
