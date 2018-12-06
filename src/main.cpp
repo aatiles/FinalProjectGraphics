@@ -95,7 +95,7 @@ glm::vec3 OKdirection;
 GLfloat OK_rotation = 0;
 GLfloat OKradius = 1;
 GLfloat OKk = 0.1;
-GLfloat OKrest_length = 5.0;
+GLfloat OKrest_length = 10.0;
 
 // Rope Variables
 GLuint ropeVAOd;
@@ -696,12 +696,6 @@ void populateMarbles() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
-    glm::vec3 heading = marbles[0]->location - OKlocation;
-    float mag = OKk*(glm::length(heading) - OKrest_length);
-    if (mag > 0){
-        OKdirection = OKk*(glm::length(heading) - OKrest_length)*heading;
-        OKlocation = OKlocation + OKdirection;
-    }
     // TODO TEXTURE CART
     glm::vec3 rotationAxis = glm::cross( OKdirection, glm::vec3(0,1,0) );
 
@@ -722,6 +716,16 @@ glm::vec3 spring(float k, float rest, glm::vec3 source, glm::vec3 dest){
     glm::vec3 dir = dest-source;
     float dist = glm::length(dir);
     return k*(dist-rest)*dir;
+}
+
+void moveOreKart(){
+    glm::vec3 heading = marbles[0]->location - OKlocation;
+    float mag = OKk*(glm::length(heading) - OKrest_length);
+    if (mag > 0){
+        OKdirection = OKk*(glm::length(heading) - OKrest_length)*heading;
+        OKlocation = OKlocation + OKdirection;
+    }
+
 }
 
 void moveRope(){
@@ -858,7 +862,7 @@ void moveMarbles() {
     for (int i = 1; i < 4; i++){
         marbles[i]->radius = 0.5 + 0.3*sin(sys_time);
     }
-
+    moveOreKart();
     moveRope();
 }
 
@@ -877,8 +881,8 @@ void collideMarblesWithWall() {
     // Game Over
     if (marbles[0]->location.y < -3){
         printf("Game over at level %d\n", numMarbles - 4);
-        printf("You survived %f seconds", sys_time);
-        printf("Rope Rest: %f\n",ropeRest);
+        printf("You survived %f seconds\n", sys_time);
+        //printf("Rope Rest: %f\n",ropeRest);
         exit(EXIT_SUCCESS);
     }
 
