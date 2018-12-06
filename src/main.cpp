@@ -101,8 +101,11 @@ GLfloat OKrest_length = 5.0;
 GLuint ropeVAOd;
 GLuint ropeTextureHandle;
 GLuint ropeVbod;
-const int ropeSize = 2;
+const int ropeSize = 3;
 VertexTextured ropeVertices[ropeSize];
+float ropeMass = 0.1;
+float ropeK = 0.1;
+float ropeRest = OKrest_length/(float) (ropeSize - 1)
 
 // Movement Variables
 int goingForward = 0;
@@ -714,6 +717,12 @@ void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_c
     // drawRightBackWheel();
 }
 
+glm::vec3 spring(float k, float rest, glm::vec3 source, glm::vec3 dest){
+    glm::vec3 dir = dest-source;
+    float dist = glm::length(dir);
+    return k*(dist-length)*dir;
+}
+
 void moveRope(){
     glm::vec3 heroLoc = marbles[0]->location;
     ropeVertices[0].x = heroLoc.x;
@@ -723,6 +732,18 @@ void moveRope(){
     ropeVertices[ropeSize - 1].x = OKlocation.x;
     ropeVertices[ropeSize - 1].z = OKlocation.z;
 
+    glm::vec3 g = ropeMass*-9.81*glm::vec3(0,-1,0);
+    for (int i = 1; i < ropeSize-1; i++){
+        VertexTextured r1 = ropeVertices[i-1];
+        VertexTextured r2 = ropeVertices[i];
+        VertexTextured r3 = ropeVertices[i+1];
+        glm::vec3 f1 = spring(ropeK, ropeRest, glm::vec3(r2.x, r2.y, r2.z), glm::vec3(r1.x, r1.y, r1.z));
+        glm::vec3 f2 = spring(ropeK, ropeRest, glm::vec3(r2.x, r2.y, r2.z), glm::vec3(r3.x, r3.y, r3.z));
+        glm::vec3 sumF = g + f1 + f2;
+        ropeVertices[i].x += sumF.x;
+        ropeVertices[i].y += sumF.y;
+        ropeVertices[i].z += sumF.z;
+    }
 }
 
 void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
@@ -814,7 +835,7 @@ void moveMarbles() {
             angle = glm::acos(glm::dot(cur_dir, target_head));
         }
         angle *= -0.1;
-        if (glm::cross(cur_dir, target_head).y < 0) angle *= -1;
+        if (glm::cross(cur_dir, target_head).y > 0) angle *= -1;
         //printf("Angle %f\n",angle);
         glm::mat4 rotationMat(1); // Creates a identity matri
         rotationMat = glm::rotate(rotationMat, angle, glm::vec3(0.0, 1.0, 0.0));
