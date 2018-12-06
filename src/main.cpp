@@ -590,7 +590,8 @@ void setupBuffers() {
     glm::vec3 end = OKlocation;
     for (int i = 0; i < ropeSize; i++){
         float a = i/(float) ropeSize;
-        ropeVertices[i] = {a*begin.x + (1-a)*end.x, 1.0, a*begin.z + (1-a)*end.z, i%2, i%2};
+        VertexTextured b = {a*begin.x + (1-a)*end.x, 1.0, a*begin.z + (1-a)*end.z, i%2, i%2};
+        ropeVertices[i] = b;
     }
 
     glGenVertexArrays( 1, &ropeVAOd );
