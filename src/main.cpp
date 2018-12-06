@@ -130,8 +130,11 @@ GLint uniform_post_proj_loc, uniform_post_fbo_loc;
 GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
 
 GLuint texturedQuadVAO;
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> Updated to reflect recent work
 // System Time
 float sys_time = 0;
 
@@ -367,6 +370,8 @@ void setupOpenGL() {
     glEnable( GL_DEPTH_TEST );                    // enable depth testing
     glDepthFunc( GL_LESS );                            // use less than depth test
 
+    glFrontFace( GL_CCW );
+
     glEnable(GL_BLEND);                                    // enable blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    // use one minus blending equation
 
@@ -452,12 +457,15 @@ void setupShaders() {
     attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
 
+<<<<<<< HEAD
     treeShaderProgram = new CSCI441::ShaderProgram( "shaders/billboardQuadShader.v.glsl",
                                                 "shaders/billboardQuadShader.g.glsl",
                                                 "shaders/billboardQuadShader.f.glsl" );
     modelview_tree_uniform_location  = treeShaderProgram->getUniformLocation( "mvMatrix" );
     projection_tree_uniform_location = treeShaderProgram->getUniformLocation( "projMatrix" );
     vpos_tree_attrib_location        = treeShaderProgram->getAttributeLocation( "vPos" );
+=======
+>>>>>>> Updated to reflect recent work
 	postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/grayscale.v.glsl", "shaders/grayscale.f.glsl");
 	uniform_post_proj_loc = postprocessingShaderProgram->getUniformLocation("projectionMtx");
 	uniform_post_fbo_loc = postprocessingShaderProgram->getUniformLocation("fbo");
@@ -659,6 +667,33 @@ void setupBuffers() {
     glVertexAttribPointer( attrib_vPos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) 0 );
     glEnableVertexAttribArray( attrib_vTextureCoord_loc );
     glVertexAttribPointer( attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3) );
+  //////////////////////////////////////////
+  //
+  // TEXTURED QUAD
+
+  // LOOKHERE #1
+
+  VertexTextured texturedQuadVerts[4] = {
+	  { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f }, // 0 - BL
+	  { 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f }, // 1 - BR
+	  { -1.0f, 1.0f,  0.0f, 0.0f, 1.0f }, // 2 - TL
+	  { 1.0f,  1.0f,  0.0f, 1.0f, 1.0f }  // 3 - TR
+  };
+
+  unsigned short texturedQuadIndices[4] = { 0, 1, 2, 3 };
+
+  glGenVertexArrays(1, &texturedQuadVAO);
+  glBindVertexArray(texturedQuadVAO);
+  glGenBuffers(2, vbods);
+  glBindBuffer(GL_ARRAY_BUFFER, vbods[0]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(texturedQuadVerts), texturedQuadVerts, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbods[1]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(texturedQuadIndices), texturedQuadIndices, GL_STATIC_DRAW);
+  postprocessingShaderProgram->useProgram();
+  glEnableVertexAttribArray(attrib_post_vpos_loc);
+  glVertexAttribPointer(attrib_post_vpos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void *)0);
+  glEnableVertexAttribArray(attrib_post_vtex_loc);
+  glVertexAttribPointer(attrib_post_vtex_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void *)(sizeof(float) * 3));
 
     //////////////////////////////////////////
     //
@@ -1141,18 +1176,25 @@ int main( int argc, char *argv[] ) {
 		// set the projection matrix based on the window size
 		// use a perspective projection that ranges
 		// with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
-		glm::mat4 projectionMatrix = glm::perspective(45.0f, framebufferWidth / (float)framebufferHeight, 0.001f, 100.0f);
+		glm::mat4 projectionMatrix = glm::perspective(45.0f, framebufferWidth / (float)framebufferHeight, 0.001f, 10000.0f);
 
 		//postprocessingShaderProgram->useProgram();
 		// set up our look at matrix to position our camera
 		// Camera looks at Marble
 		lookAtPoint = marbles[0]->location;
 		convertSphericalToCartesian();
-		glm::mat4 viewMatrix = glm::lookAt(cameraDis*eyePoint, lookAtPoint, upVector);
-		collideMarblesWithWall();
+                glm::mat4 viewMatrix = glm::lookAt(eyePoint, lookAtPoint, upVector);
+		/*
+                collideMarblesWithWall();
 		collideMarblesWithEachother();
-		moveMarbles();
+		moveMarbles();*/
 		// pass our view and projection matrices
+        if (glfwGetTime() - last_update > 0.016) {
+            last_update = glfwGetTime();
+            collideMarblesWithWall();
+            collideMarblesWithEachother();
+            moveMarbles();
+        }
 		renderScene(viewMatrix, projectionMatrix);
 
 		glFlush();
