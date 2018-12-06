@@ -120,6 +120,7 @@ int turnRight = 0;
 float speedRatio = 0.3;
 float speedIncrease = 0.1;
 
+
 //FBO Stuff
 GLuint fbo;
 int framebufferWidth = 1024, framebufferHeight = 1024;
@@ -130,11 +131,6 @@ GLint uniform_post_proj_loc, uniform_post_fbo_loc;
 GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
 
 GLuint texturedQuadVAO;
-<<<<<<< HEAD
-
-
-=======
->>>>>>> Updated to reflect recent work
 // System Time
 float sys_time = 0;
 
@@ -457,15 +453,12 @@ void setupShaders() {
     attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
 
-<<<<<<< HEAD
     treeShaderProgram = new CSCI441::ShaderProgram( "shaders/billboardQuadShader.v.glsl",
                                                 "shaders/billboardQuadShader.g.glsl",
                                                 "shaders/billboardQuadShader.f.glsl" );
     modelview_tree_uniform_location  = treeShaderProgram->getUniformLocation( "mvMatrix" );
     projection_tree_uniform_location = treeShaderProgram->getUniformLocation( "projMatrix" );
     vpos_tree_attrib_location        = treeShaderProgram->getAttributeLocation( "vPos" );
-=======
->>>>>>> Updated to reflect recent work
 	postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/grayscale.v.glsl", "shaders/grayscale.f.glsl");
 	uniform_post_proj_loc = postprocessingShaderProgram->getUniformLocation("projectionMtx");
 	uniform_post_fbo_loc = postprocessingShaderProgram->getUniformLocation("fbo");
