@@ -66,11 +66,12 @@ struct VertexTextured {
 };
 GLuint platformVAOd;
 GLuint platformTextureHandle;
-GLfloat groundSize = 13;
+GLfloat groundSize = 50;
 
 // Skybox Variables
 GLuint skyboxVAOds[6];                                            // all of our skybox VAOs
 GLuint skyboxHandles[6];                    // all of our skybox handles
+float skyBoxSize = 300;
 
 // Shader Programs
 CSCI441::ShaderProgram* textureShaderProgram = NULL;
@@ -98,25 +99,27 @@ glm::vec3 OKdirection;
 GLfloat OK_rotation = 0;
 GLfloat OKradius = 1;
 GLfloat OKk = 0.1;
-GLfloat OKrest_length = 5.0;
+GLfloat OKrest_length = 8.0;
 
 // Rope Variables
 GLuint ropeVAOd;
 GLuint ropeTextureHandle;
 GLuint ropeVbod;
-const int ropeSize = 20;
+const int ropeSize = 12;
 VertexTextured ropeVertices[ropeSize];
 float ropeMass = 0.001;
 float ropeK = 10.0;
-float ropeRest = 0.5*OKrest_length/(float) (ropeSize - 1);
+float ropeRest = 0.9*OKrest_length/(float) (ropeSize - 1);
 float ropeTimeScale = 0.1;
 int ropeRender = 30;
+
 // Movement Variables
 int goingForward = 0;
 int goingBackward = 0;
 int turnLeft = 0;
 int turnRight = 0;
 float speedRatio = 0.3;
+float speedIncrease = 0.1;
 
 // System Time
 float sys_time = 0;
@@ -375,17 +378,16 @@ void setupGLEW() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void setupTextures() {
-    platformTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/metal.jpg" );
 
     // and get handles for our full skybox
   printf( "[INFO]: registering skybox..." );
   fflush( stdout );
-  skyboxHandles[0] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox/back.png"   );   printf( "." ); fflush( stdout );
-  skyboxHandles[1] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox/left.png"  );   printf( "." ); fflush( stdout );
-  skyboxHandles[2] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox/front.png"  );   printf( "." ); fflush( stdout );
-  skyboxHandles[3] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox/right.png"   );   printf( "." ); fflush( stdout );
-  skyboxHandles[4] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox/bottom.png" );        printf( "." ); fflush( stdout );
-  skyboxHandles[5] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox/top.png"    );   printf( "." ); fflush( stdout );
+  skyboxHandles[0] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/back.png"   );   printf( "." ); fflush( stdout );
+  skyboxHandles[1] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/left.png"  );   printf( "." ); fflush( stdout );
+  skyboxHandles[2] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/front.png"  );   printf( "." ); fflush( stdout );
+  skyboxHandles[3] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/right.png"   );   printf( "." ); fflush( stdout );
+  skyboxHandles[4] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/bottom.png" );        printf( "." ); fflush( stdout );
+  skyboxHandles[5] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/top.png"    );   printf( "." ); fflush( stdout );
   printf( "skybox textures read in and registered!\n\n" );
 
     unsigned char *brickTexData;
@@ -394,6 +396,7 @@ void setupTextures() {
     registerOpenGLTexture(brickTexData, brickTexWidth, brickTexHeight, brickTexHandle);
     printf( "[INFO]: brick texture read in and registered\n" );
 
+    platformTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/grass.jpg" );
     beverageTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/coors-b.png" );
     playerTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/Mines.jpg" );
     enemyTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
@@ -479,47 +482,47 @@ void setupBuffers() {
     unsigned short groundIndices[4] = {
         0, 1, 2, 3
     };
-
+   
     VertexTextured groundVertices[4] = {
-            { -40.0f, -40.0f, -40.0f,   0.0f,  0.0f }, // 0 - BL
-            {  40.0f, -40.0f, -40.0f,   -1.0f,  0.0f }, // 1 - BR
-            { -40.0f, -40.0f,  40.0f,   0.0f,  -1.0f }, // 2 - TL
-            {  40.0f, -40.0f,  40.0f,   -1.0f,  -1.0f }  // 3 - TR
+            { -skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+            {  skyBoxSize, -skyBoxSize, -skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
+            { -skyBoxSize, -skyBoxSize,  skyBoxSize,   0.0f,  -1.0f }, // 2 - TL
+            {  skyBoxSize, -skyBoxSize,  skyBoxSize,   -1.0f,  -1.0f }  // 3 - TR
     };
 
     VertexTextured leftWallVerts[4] = {
-      { -40.0f, -40.0f, -40.0f,   0.0f,  0.0f }, // 0 - BL
-      {  40.0f, -40.0f, -40.0f,   1.0f,  0.0f }, // 1 - BR
-      { -40.0f,  40.0f, -40.0f,   0.0f,  1.0f }, // 2 - TL
-      {  40.0f,  40.0f, -40.0f,   1.0f,  1.0f }  // 3 - TR
+      { -skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      {  skyBoxSize, -skyBoxSize, -skyBoxSize,   1.0f,  0.0f }, // 1 - BR
+      { -skyBoxSize,  skyBoxSize, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      {  skyBoxSize,  skyBoxSize, -skyBoxSize,   1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured rightWallVerts[4] = {
-      { -40.0f, -40.0f,  40.0f,   0.0f,  0.0f }, // 0 - BL
-      {  40.0f, -40.0f,  40.0f,   -1.0f,  0.0f }, // 1 - BR
-      { -40.0f,  40.0f,  40.0f,   0.0f,  1.0f }, // 2 - TL
-      {  40.0f,  40.0f,  40.0f,   -1.0f,  1.0f }  // 3 - TR
+      { -skyBoxSize, -skyBoxSize,  skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      {  skyBoxSize, -skyBoxSize,  skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
+      { -skyBoxSize,  skyBoxSize,  skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      {  skyBoxSize,  skyBoxSize,  skyBoxSize,   -1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured backWallVerts[4] = {
-      { -40.0f, -40.0f, -40.0f,   0.0f,  0.0f }, // 0 - BL
-      { -40.0f, -40.0f,  40.0f,   -1.0f,  0.0f }, // 1 - BR
-      { -40.0f,  40.0f, -40.0f,   0.0f,  1.0f }, // 2 - TL
-      { -40.0f,  40.0f,  40.0f,   -1.0f,  1.0f }  // 3 - TR
+      { -skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      { -skyBoxSize, -skyBoxSize,  skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
+      { -skyBoxSize,  skyBoxSize, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      { -skyBoxSize,  skyBoxSize,  skyBoxSize,   -1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured frontWallVerts[4] = {
-      {  40.0f, -40.0f, -40.0f,   0.0f,  0.0f }, // 0 - BL
-      {  40.0f, -40.0f,  40.0f,   1.0f,  0.0f }, // 1 - BR
-      {  40.0f,  40.0f, -40.0f,   0.0f,  1.0f }, // 2 - TL
-      {  40.0f,  40.0f,  40.0f,   1.0f,  1.0f }  // 3 - TR
+      {  skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      {  skyBoxSize, -skyBoxSize,  skyBoxSize,   1.0f,  0.0f }, // 1 - BR
+      {  skyBoxSize,  skyBoxSize, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      {  skyBoxSize,  skyBoxSize,  skyBoxSize,   1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured topWallVerts[4] = {
-            { -40.0f,  40.0f, -40.0f,   1.0f,  -1.0f }, // 0 - BL
-            {  40.0f,  40.0f, -40.0f,   1.0f,  0.0f }, // 1 - BR
-            { -40.0f,  40.0f,  40.0f,   0.0f,  -1.0f }, // 2 - TL
-            {  40.0f,  40.0f,  40.0f,   0.0f,  0.0f }  // 3 - TR
+            { -skyBoxSize,  skyBoxSize, -skyBoxSize,   1.0f,  -1.0f }, // 0 - BL
+            {  skyBoxSize,  skyBoxSize, -skyBoxSize,   1.0f,  0.0f }, // 1 - BR
+            { -skyBoxSize,  skyBoxSize,  skyBoxSize,   0.0f,  -1.0f }, // 2 - TL
+            {  skyBoxSize,  skyBoxSize,  skyBoxSize,   0.0f,  0.0f }  // 3 - TR
     };
 
     glGenVertexArrays( 6, skyboxVAOds );
@@ -671,13 +674,13 @@ void populateMarbles() {
     marbles[1]->type        = 1;
     // Second Goal
     marbles[1]->location    = glm::vec3(randRange(-groundSize, groundSize),
-                                        1000,
+                                        0,
                                         randRange(-groundSize, groundSize));
     marbles[2]->radius      = 0.5;
     marbles[2]->type        = 1;
     // Third Goal
     marbles[3]->location    = glm::vec3(randRange(-groundSize, groundSize),
-                                        1000,
+                                        0,
                                         randRange(-groundSize, groundSize));
     marbles[3]->radius      = 0.5;
     marbles[3]->type        = 1;
@@ -719,7 +722,7 @@ void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_c
 glm::vec3 spring(float k, float rest, glm::vec3 source, glm::vec3 dest){
     glm::vec3 dir = dest-source;
     float dist = glm::length(dir);
-    if (dist-rest > -3)
+    if (dist-rest > -OKrest_length)
         return k*(dist-rest)*dir;
     return glm::vec3(0,0,0);
 }
@@ -891,7 +894,6 @@ void collideMarblesWithWall() {
         printf("Game over at level %d\n", numMarbles - 4);
         printf("You survived %f seconds\n", sys_time);
         //printf("Rope Rest: %f\n",ropeRest);
-        printf("Total Time %f \n", start_time - glfwGetTime());
         exit(EXIT_SUCCESS);
     }
 
@@ -917,14 +919,13 @@ void collideMarblesWithEachother() {
                                     marbles[0]->location.z));
         if( dist < marbles[i]->radius + marbles[0]->radius){
             if (i < 4){
-                int nextMarble = (i)%3 + 1;
-                marbles[i]->location.y = 1000;
-                marbles[nextMarble]->location = glm::vec3(  randRange(-groundSize, groundSize),
-                                                            0,
-                                                            randRange(-groundSize, groundSize));
+                marbles[i]->location = glm::vec3(   randRange(-groundSize, groundSize),
+                                                    0,
+                                                    randRange(-groundSize, groundSize));
                 if ( i == 3 || numMarbles > 6){
                     glm::vec3 loc = marbles[i]->location;
                     float inside = 0.7;
+                    speedRatio += speedIncrease*(1.1 - speedRatio);
                     Marble* m = new Marble( glm::vec3(randRange(-inside*groundSize, inside*groundSize),
                                                         0,
                                                        randRange(-inside*groundSize, inside*groundSize)),
@@ -934,6 +935,7 @@ void collideMarblesWithEachother() {
                                             marbleRadius );
                     marbles.push_back( m );
                     numMarbles++;
+                    
                     printf("Level %d Unocked at %f %f %f\n", numMarbles - 4, m->location.x, m->location.y, m->location.z);
                 }
             }
@@ -1064,7 +1066,7 @@ int main( int argc, char *argv[] ) {
         // set the projection matrix based on the window size
         // use a perspective projection that ranges
         // with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
-        glm::mat4 projectionMatrix = glm::perspective( 45.0f, windowWidth / (float) windowHeight, 0.001f, 100.0f );
+        glm::mat4 projectionMatrix = glm::perspective( 45.0f, windowWidth / (float) windowHeight, 0.001f, 10000.0f );
 
         // set up our look at matrix to position our camera
         // Camera looks at Marble
