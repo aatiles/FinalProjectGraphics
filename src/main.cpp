@@ -130,6 +130,8 @@ GLint uniform_post_proj_loc, uniform_post_fbo_loc;
 GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
 
 GLuint texturedQuadVAO;
+
+
 // System Time
 float sys_time = 0;
 
@@ -450,15 +452,12 @@ void setupShaders() {
     attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
 
-<<<<<<< HEAD
     treeShaderProgram = new CSCI441::ShaderProgram( "shaders/billboardQuadShader.v.glsl",
                                                 "shaders/billboardQuadShader.g.glsl",
                                                 "shaders/billboardQuadShader.f.glsl" );
     modelview_tree_uniform_location  = treeShaderProgram->getUniformLocation( "mvMatrix" );
     projection_tree_uniform_location = treeShaderProgram->getUniformLocation( "projMatrix" );
     vpos_tree_attrib_location        = treeShaderProgram->getAttributeLocation( "vPos" );
-}
-=======
 	postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/grayscale.v.glsl", "shaders/grayscale.f.glsl");
 	uniform_post_proj_loc = postprocessingShaderProgram->getUniformLocation("projectionMtx");
 	uniform_post_fbo_loc = postprocessingShaderProgram->getUniformLocation("fbo");
@@ -477,7 +476,6 @@ void setupShaders() {
 	attrib_blur_vTextureCoord_loc   = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
 	*/
 	}
->>>>>>> This is the framebuffer stuff
 
 // setupBuffers() //////////////////////////////////////////////////////////////
 //
@@ -640,7 +638,6 @@ void setupBuffers() {
   glEnableVertexAttribArray(attrib_vTextureCoord_loc);
   glVertexAttribPointer(attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3));
 
-<<<<<<< HEAD
     //////////////////////////////////////////
     //
     // ROPE
@@ -682,10 +679,8 @@ void setupBuffers() {
     glEnableVertexAttribArray( vpos_tree_attrib_location );
     glVertexAttribPointer( vpos_tree_attrib_location, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0 );
 
-}
 
-/*
-=======
+
   //////////////////////////////////////////
   //
   // TEXTURED QUAD
@@ -715,7 +710,6 @@ void setupBuffers() {
   glVertexAttribPointer(attrib_post_vtex_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void *)(sizeof(float) * 3));
 }
 
->>>>>>> This is the framebuffer stuff
 void setupFramebuffer() {
 // TODO #1 - Setup everything with the framebuffer
 glGenFramebuffers(1, &fbo);
@@ -1124,6 +1118,7 @@ int main( int argc, char *argv[] ) {
     setupShaders();                                        // load our shaders into memory
     setupBuffers();                                        // load all our VAOs and VBOs into memory
     setupTextures();                                    // load all textures into memory
+    setupFramebuffer();
     populateMarbles();                                // generate marbles
 
     convertSphericalToCartesian();        // set up our camera position
@@ -1175,7 +1170,7 @@ int main( int argc, char *argv[] ) {
 		glUniformMatrix4fv(uniform_post_proj_loc, 1, GL_FALSE, &projectionMatrix[0][0]);
 		glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
 		glBindVertexArray(texturedQuadVAO);
-		//glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
 
 		// Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
         // when using a Retina display the actual window can be larger than the requested window.  Therefore
