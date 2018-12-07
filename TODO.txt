@@ -1,24 +1,15 @@
 Ore Cart????
     +Create Cart //made in hierarchical fashion
         +Draw Wheels
-    +Display connection between you and kart with LINE_STRIP
-    Clean up names of current particle system
-    +Particle system is pulled with springs
-    +Particle system pulls cart
-    +Particle system collides with itsself
 Scene and Obsticles
     Better Texture for:
         Character
-        Skybox
-        Platform
     Decide Obsticle texture
     +Create obsticle billboarding
     +Generate obsticles
     +Generate Obsticles without causing the player problems
     +Fix enemy generation to not be on hero
-    +more "interesting" beverage spawns
 Add Blurr
-    +Get FBO stuff working
     +Design blurr function
     +Have blur function receive inputs to animate
 Display Score Outside Command Line
@@ -28,4 +19,7 @@ Display Score Outside Command Line
     +Game Reset Function
 Camera Movement smoother
     +Change camera direction with character movement
+Lighing
+    + WTF we need to do something
+        Maybe have light come out of the beers???
 

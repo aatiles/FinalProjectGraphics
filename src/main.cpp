@@ -36,7 +36,6 @@
 
 #include "include/Marble.h"
 
-
 //******************************************************************************
 //
 // Global Parameters
@@ -124,6 +123,18 @@ float speedIncrease = 0.1;
 // System Time
 float sys_time = 0;
 
+//Trees
+CSCI441::ShaderProgram *treeShaderProgram = NULL;
+GLint modelview_tree_uniform_location, projection_tree_uniform_location;
+GLint vpos_tree_attrib_location;
+const int NUM_POINTS = 200;
+struct Vertex { GLfloat x, y, z; };
+Vertex points[NUM_POINTS];
+GLuint pointsVAO, pointsVBO;
+
+GLuint treeTextureHandle;
+
+
 //******************************************************************************
 //
 // Helper Functions
@@ -139,6 +150,10 @@ void convertSphericalToCartesian() {
     eyePoint.x = lookAtPoint.x + cameraAngles.z * sinf( cameraAngles.x ) * sinf( cameraAngles.y );
     eyePoint.y = lookAtPoint.y + cameraAngles.z * -cosf( cameraAngles.y );
     eyePoint.z = lookAtPoint.z + cameraAngles.z * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );
+}
+
+float randRange(float min, float max){
+    return rand()/(float) RAND_MAX * (max-min) + min;
 }
 
 bool registerOpenGLTexture(unsigned char *textureData,
@@ -344,6 +359,10 @@ void setupOpenGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    // use one minus blending equation
 
     glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );    // clear the frame buffer to black
+
+    glEnable( GL_TEXTURE_2D );
+
+    glPointSize( 4.0 );
 }
 
 // setupGLEW() /////////////////////////////////////////////////////////////////
@@ -399,8 +418,9 @@ void setupTextures() {
     platformTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/grass.jpg" );
     beverageTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/coors-b.png" );
     playerTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/Mines.jpg" );
-    enemyTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
-    ropeTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/rope.png" );
+    enemyTextureHandle  = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
+    ropeTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/rope.png" );
+    treeTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/goodboi.png" );
 }
 
 void setupShaders() {
@@ -419,7 +439,14 @@ void setupShaders() {
     uniform_m_color_loc             = textureShaderProgram->getUniformLocation( "color" );
     attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
-	}
+
+    treeShaderProgram = new CSCI441::ShaderProgram( "shaders/billboardQuadShader.v.glsl",
+                                                "shaders/billboardQuadShader.g.glsl",
+                                                "shaders/billboardQuadShader.f.glsl" );
+    modelview_tree_uniform_location  = treeShaderProgram->getUniformLocation( "mvMatrix" );
+    projection_tree_uniform_location = treeShaderProgram->getUniformLocation( "projMatrix" );
+    vpos_tree_attrib_location        = treeShaderProgram->getAttributeLocation( "vPos" );
+}
 
 // setupBuffers() //////////////////////////////////////////////////////////////
 //
@@ -615,11 +642,27 @@ void setupBuffers() {
     glEnableVertexAttribArray( attrib_vTextureCoord_loc );
     glVertexAttribPointer( attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3) );
 
+    //////////////////////////////////////////
+    //
+    // Trees
+    for( int i = 0; i < NUM_POINTS; i++ ) {
+        Vertex v = {    randRange(-groundSize, groundSize),
+                        0,
+                        randRange(-groundSize, groundSize) };
+        points[i] = v;
+    }
+
+    glGenVertexArrays( 1, &pointsVAO );
+    glBindVertexArray( pointsVAO );
+
+    glGenBuffers( 1, &pointsVBO );
+    glBindBuffer( GL_ARRAY_BUFFER, pointsVBO );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW );
+    glEnableVertexAttribArray( vpos_tree_attrib_location );
+    glVertexAttribPointer( vpos_tree_attrib_location, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0 );
+
 }
 
-float randRange(float min, float max){
-    return rand()/(float) RAND_MAX * (max-min) + min;
-}
 /*
 void setupFramebuffer() {
 // TODO #1 - Setup everything with the framebuffer
@@ -772,6 +815,7 @@ void moveRope(){
 }
 
 void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
+    CSCI441::setVertexAttributeLocations( attrib_vPos_loc, -1, attrib_vTextureCoord_loc );
     // Draw Scenery
     textureShaderProgram->useProgram();
 
@@ -820,6 +864,33 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
         marbles[i]->draw( m, uniform_m_modelMtx_loc, uniform_m_color_loc );
     }
     drawOreKart( m, uniform_modelMtx_loc, uniform_m_color_loc);
+
+    // Trees
+    CSCI441::setVertexAttributeLocations( vpos_tree_attrib_location );
+  // stores our model matrix
+  glm::mat4 modelMtx = glm::mat4(1.0,0.0,0.0,0.0,
+                 0.0,1.0,0.0,0.0,
+                 0.0,0.0,1.0,0.0,
+                 0.0,0.0,0.0,1.0);
+
+  // use our shader program
+    treeShaderProgram->useProgram();
+
+  // precompute our MVP CPU side so it only needs to be computed once
+  glm::mat4 mvMtx = viewMatrix * modelMtx;;
+  // send MVP to GPU
+  glUniformMatrix4fv(modelview_tree_uniform_location, 1, GL_FALSE, &mvMtx[0][0]);
+  glUniformMatrix4fv(projection_tree_uniform_location, 1, GL_FALSE, &projectionMatrix[0][0]);
+
+    glBindVertexArray( pointsVAO );
+    // TODO #2 : send our sorted data
+    glBindBuffer( GL_ARRAY_BUFFER, pointsVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
+    // LOOKHERE #4
+    glBindTexture( GL_TEXTURE_2D, treeTextureHandle );
+    glDrawArrays( GL_POINTS, 0, NUM_POINTS );
+
+
 }
 
 glm::vec3 collide(glm::vec3 vec_in, glm::vec3 norm){
@@ -1007,7 +1078,6 @@ int main( int argc, char *argv[] ) {
 
     convertSphericalToCartesian();        // set up our camera position
 
-    CSCI441::setVertexAttributeLocations( attrib_vPos_loc, -1, attrib_vTextureCoord_loc );
     CSCI441::drawSolidSphere( 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
     CSCI441::drawSolidCylinder( 1, 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
     CSCI441::drawSolidTorus( 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
