@@ -145,6 +145,8 @@ GLuint pointsVAO, pointsVBO;
 
 GLuint treeTextureHandle;
 
+// System Time
+float sys_time = 0;
 
 //******************************************************************************
 //
@@ -1214,6 +1216,7 @@ int main( int argc, char *argv[] ) {
 
         // update the viewport - tell OpenGL we want to render to the whole window
         glViewport( 0, 0, windowWidth, windowHeight );
+        
         glfwSwapBuffers(window);// flush the OpenGL commands and make sure they get rendered!
         glfwPollEvents();                // check for any events and signal to redraw screen
 
