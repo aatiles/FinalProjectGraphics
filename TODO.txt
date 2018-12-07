@@ -3,8 +3,8 @@ Ore Cart????
         +Draw Wheels
     +Display connection between you and kart with LINE_STRIP
     Clean up names of current particle system
-    +Particle system is pulled with springs
-    +Particle system pulls cart
+    [COMPLETE]Particle system is pulled with springs
+    [COMPLETE]Particle system pulls cart
     +Particle system collides with itsself
 Scene and Obsticles
     Better Texture for:
