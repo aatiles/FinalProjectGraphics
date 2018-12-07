@@ -127,10 +127,15 @@ int framebufferWidth = 1024, framebufferHeight = 1024;
 GLuint framebufferTextureHandle;
 
 CSCI441::ShaderProgram *postprocessingShaderProgram = NULL;
-GLint uniform_post_proj_loc, uniform_post_fbo_loc;
+GLint uniform_post_proj_loc, uniform_post_fbo_loc, uniform_post_time_loc;
 GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
-
+GLint uniform_post_dist_loc, uniform_post_a_loc;
 GLuint texturedQuadVAO;
+int beers = 0;
+float b_distance=0;
+float b_dist_inc = 0.003;
+float alpha=1;
+float alpha_ratio = 0.7;
 
 //Trees
 CSCI441::ShaderProgram *treeShaderProgram = NULL;
@@ -459,9 +464,14 @@ void setupShaders() {
     modelview_tree_uniform_location  = treeShaderProgram->getUniformLocation( "mvMatrix" );
     projection_tree_uniform_location = treeShaderProgram->getUniformLocation( "projMatrix" );
     vpos_tree_attrib_location        = treeShaderProgram->getAttributeLocation( "vPos" );
-	postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/grayscale.v.glsl", "shaders/grayscale.f.glsl");
+
+
+	postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl");
 	uniform_post_proj_loc = postprocessingShaderProgram->getUniformLocation("projectionMtx");
 	uniform_post_fbo_loc = postprocessingShaderProgram->getUniformLocation("fbo");
+	uniform_post_time_loc = postprocessingShaderProgram->getUniformLocation("systime");
+	uniform_post_dist_loc = postprocessingShaderProgram->getUniformLocation("distance");
+	uniform_post_a_loc = postprocessingShaderProgram->getUniformLocation("a");
 	attrib_post_vpos_loc = postprocessingShaderProgram->getAttributeLocation("vPos");
 	attrib_post_vtex_loc = postprocessingShaderProgram->getAttributeLocation("vTexCoord");
 
@@ -1033,11 +1043,18 @@ void collideMarblesWithEachother() {
                                     marbles[0]->radius + marbles[0]->location.y,
                                     marbles[0]->location.z));
         if( dist < marbles[i]->radius + marbles[0]->radius){
+            //Collect Beers
             if (i < 4){
+                beers++;
+                b_distance+=b_dist_inc;
+                alpha *= alpha_ratio;
                 marbles[i]->location = glm::vec3(   randRange(-groundSize, groundSize),
                                                     0,
                                                     randRange(-groundSize, groundSize));
-                if ( i == 3 || numMarbles > 6){
+
+                
+                // Spawn officer
+                if ( randRange(0,2) < 1 || numMarbles > 6){
                     glm::vec3 loc = marbles[i]->location;
                     float inside = 0.7;
                     speedRatio += speedIncrease*(1.1 - speedRatio);
@@ -1175,7 +1192,11 @@ int main( int argc, char *argv[] ) {
 		postprocessingShaderProgram->useProgram();
 		projectionMatrix = glm::ortho(-1, 1, -1, 1);
 		glUniformMatrix4fv(uniform_post_proj_loc, 1, GL_FALSE, &projectionMatrix[0][0]);
-		glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
+		sys_time += 0.01;
+                glUniform1f(uniform_post_time_loc, sys_time);
+                glUniform1f(uniform_post_dist_loc, b_distance);
+                glUniform1f(uniform_post_a_loc, alpha);
+                glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
 		glBindVertexArray(texturedQuadVAO);
 		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
 
