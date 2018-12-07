@@ -39,7 +39,9 @@
 //******************************************************************************
 //
 // Global Parameters
-
+// has the window been moved? Move it once to make the mac window work 
+// (hack in main.cpp main loop. This flag makes it only happen once.)
+bool movedWindow = false;
 // Clock
 double start_time = glfwGetTime();
 
@@ -415,7 +417,7 @@ void setupTextures() {
     registerOpenGLTexture(brickTexData, brickTexWidth, brickTexHeight, brickTexHandle);
     printf( "[INFO]: brick texture read in and registered\n" );
 
-    platformTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/grass.jpg" );
+    platformTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/grass.png" );
     beverageTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/coors-b.png" );
     playerTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/Mines.jpg" );
     enemyTextureHandle  = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
@@ -1157,6 +1159,13 @@ int main( int argc, char *argv[] ) {
             collideMarblesWithWall();
             collideMarblesWithEachother();
             moveMarbles();
+        }
+        // hack to make the window work on the mac without manually dragging
+        if (! movedWindow) {
+            movedWindow = true;
+            int xpos, ypos;
+            glfwGetWindowPos(window, &xpos, &ypos);
+            glfwSetWindowPos(window, xpos + 1, ypos);
         }
     }
 
