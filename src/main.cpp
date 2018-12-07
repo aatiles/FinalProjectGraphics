@@ -134,19 +134,6 @@ GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
 GLuint texturedQuadVAO;
 
 
-
-//FBO Stuff
-GLuint fbo;
-int framebufferWidth = 1024, framebufferHeight = 1024;
-GLuint framebufferTextureHandle;
-
-CSCI441::ShaderProgram *postprocessingShaderProgram = NULL;
-GLint uniform_post_proj_loc, uniform_post_fbo_loc;
-GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
-
-GLuint texturedQuadVAO;
-
-
 // System Time
 float sys_time = 0;
 
@@ -676,6 +663,11 @@ void setupBuffers() {
   glVertexAttribPointer(attrib_post_vpos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void *)0);
   glEnableVertexAttribArray(attrib_post_vtex_loc);
   glVertexAttribPointer(attrib_post_vtex_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void *)(sizeof(float) * 3));
+
+}
+
+float randRange(float min, float max){
+    return rand()/(float) RAND_MAX * (max-min) + min;
 }
 
 void setupFramebuffer() {
@@ -1127,6 +1119,7 @@ int main( int argc, char *argv[] ) {
 
         // update the viewport - tell OpenGL we want to render to the whole window
         glViewport( 0, 0, windowWidth, windowHeight );
+        
         glfwSwapBuffers(window);// flush the OpenGL commands and make sure they get rendered!
         glfwPollEvents();                // check for any events and signal to redraw screen
 
