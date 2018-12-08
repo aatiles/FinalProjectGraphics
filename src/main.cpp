@@ -33,6 +33,7 @@
 #include <CSCI441/modelLoader3.hpp> // to load in OBJ models
 #include <CSCI441/OpenGLUtils3.hpp> // to print info about OpenGL
 
+#include <CSCI441/FramebufferUtils3.hpp>
 #include <CSCI441/objects3.hpp>
 #include <CSCI441/ShaderProgram3.hpp>
 #include <CSCI441/TextureUtils.hpp>
@@ -61,8 +62,8 @@ glm::vec3 eyePoint(   5.0f, 5.0f, 5.0f );
 glm::vec3 lookAtPoint( 0.0f,  0.0f,  0.0f );
 glm::vec3 upVector(    0.0f,  1.0f,  0.0f );
 glm::vec3 lightPos(10.0f, 10.0f, 10.0f);
-float cameraDis = 0.5;
-int objectIndex = 2;
+float cameraDis = 30;
+int ctrlPress = 0; 
 
 // Platform Variables
 struct VertexTextured {
@@ -93,7 +94,7 @@ GLint attrib_m_vPos_loc, attrib_m_vTextureCoord_loc;
 
 // Marble Variables
 std::vector< Marble* > marbles;
-GLfloat marbleRadius = 0.3;
+GLfloat marbleRadius = 4;
 GLint numMarbles = 4;
 float bump = 0.1;
 glm::vec3 marbleStart = glm::vec3(8,0,8);
@@ -135,8 +136,22 @@ GLint normalAttLoc;
 GLint viewUniformLoc;
 GLint modelUniLoc;
 CSCI441::ModelLoader* model = NULL;
-// System Time
-float sys_time = 0;
+
+//FBO Stuff
+GLuint fbo;
+int framebufferWidth = 1024, framebufferHeight = 1024;
+GLuint framebufferTextureHandle;
+
+CSCI441::ShaderProgram *postprocessingShaderProgram = NULL;
+GLint uniform_post_proj_loc, uniform_post_fbo_loc, uniform_post_time_loc;
+GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
+GLint uniform_post_dist_loc, uniform_post_a_loc;
+GLuint texturedQuadVAO;
+int beers = 0;
+float b_distance=0;
+float b_dist_inc = 0.003;
+float alpha=1;
+float alpha_ratio = 0.7;
 
 //Trees
 CSCI441::ShaderProgram *treeShaderProgram = NULL;
@@ -149,6 +164,8 @@ GLuint pointsVAO, pointsVBO;
 
 GLuint treeTextureHandle;
 
+// System Time
+float sys_time = 0;
 
 //******************************************************************************
 //
@@ -162,10 +179,9 @@ GLuint treeTextureHandle;
 //
 ////////////////////////////////////////////////////////////////////////////////
 void convertSphericalToCartesian() {
-    eyePoint.x = lookAtPoint.x + cameraAngles.z * sinf( cameraAngles.x ) * sinf( cameraAngles.y );
-    eyePoint.y = lookAtPoint.y + cameraAngles.z * -cosf( cameraAngles.y );
-    eyePoint.z = lookAtPoint.z + cameraAngles.z * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );
-}
+    eyePoint.x = lookAtPoint.x + cameraDis * sinf( cameraAngles.x ) * sinf( cameraAngles.y );
+    eyePoint.y = lookAtPoint.y + cameraDis * -cosf( cameraAngles.y );
+    eyePoint.z = lookAtPoint.z + cameraDis * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );}
 
 float randRange(float min, float max){
     return rand()/(float) RAND_MAX * (max-min) + min;
@@ -225,6 +241,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
             break;
         case GLFW_KEY_D: turnRight      = action;
             break;
+        case GLFW_KEY_LEFT_CONTROL: ctrlPress = action;
+            break;
     }
 }
 
@@ -267,18 +285,14 @@ static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
                     mousePosition.x = xpos;
                     mousePosition.y = ypos;
                 } else {
-                    if( !controlDown ) {
+                    if( ctrlPress == 0) {
                         cameraAngles.x += (xpos - mousePosition.x)*0.005f;
                         cameraAngles.y += (ypos - mousePosition.y)*0.005f;
 
                         if( cameraAngles.y < 0 ) cameraAngles.y = 0.0f + 0.001f;
                         if( cameraAngles.y >= M_PI ) cameraAngles.y = M_PI - 0.001f;
                     } else {
-                        double totChgSq = (xpos - mousePosition.x) + (ypos - mousePosition.y);
-                        cameraAngles.z += totChgSq*0.01f;
-
-                        if( cameraAngles.z <= 2.0f ) cameraAngles.z = 2.0f;
-                        if( cameraAngles.z >= 30.0f ) cameraAngles.z = 30.0f;
+                        cameraDis -= (mousePosition.y - ypos)/10;
                     }
                     convertSphericalToCartesian();
 
@@ -369,6 +383,8 @@ GLFWwindow* setupGLFW() {
 void setupOpenGL() {
     glEnable( GL_DEPTH_TEST );                    // enable depth testing
     glDepthFunc( GL_LESS );                            // use less than depth test
+
+    glFrontFace( GL_CCW );
 
     glEnable(GL_BLEND);                                    // enable blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    // use one minus blending equation
@@ -469,13 +485,35 @@ void setupShaders() {
     attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
 
-    treeShaderProgram = new CSCI441::ShaderProgram( "shaders/billboardQuadShader.v.glsl",
+    treeShaderProgram   = new CSCI441::ShaderProgram("shaders/billboardQuadShader.v.glsl",
                                                 "shaders/billboardQuadShader.g.glsl",
                                                 "shaders/billboardQuadShader.f.glsl" );
     modelview_tree_uniform_location  = treeShaderProgram->getUniformLocation( "mvMatrix" );
     projection_tree_uniform_location = treeShaderProgram->getUniformLocation( "projMatrix" );
     vpos_tree_attrib_location        = treeShaderProgram->getAttributeLocation( "vPos" );
-}
+
+
+	postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl");
+	uniform_post_proj_loc = postprocessingShaderProgram->getUniformLocation("projectionMtx");
+	uniform_post_fbo_loc = postprocessingShaderProgram->getUniformLocation("fbo");
+	uniform_post_time_loc = postprocessingShaderProgram->getUniformLocation("systime");
+	uniform_post_dist_loc = postprocessingShaderProgram->getUniformLocation("distance");
+	uniform_post_a_loc = postprocessingShaderProgram->getUniformLocation("a");
+	attrib_post_vpos_loc = postprocessingShaderProgram->getAttributeLocation("vPos");
+	attrib_post_vtex_loc = postprocessingShaderProgram->getAttributeLocation("vTexCoord");
+
+	//DUMPED CODE FOR BLUR
+	/*
+	blurShaderProgram = new CSCI441::ShaderProgram( "shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl" );
+	uniform_blur_tex_loc            = textureShaderProgram->getUniformLocation( "tex" );
+	uniform_blur_color_loc          = textureShaderProgram->getUniformLocation( "color" );
+	uniform_blur_dir_loc    	 = textureShaderProgram->getUniformLocation("dir");
+	uniform_blur_radius_loc		 = textureShaderProgram->getUniformLocation("radius");
+	uniform_blur_rez_loc	     = textureShaderProgram->getUniformLocation("rez");
+	attrib_blur_vPos_loc            = textureShaderProgram->getAttributeLocation( "vPos" );
+	attrib_blur_vTextureCoord_loc   = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
+	*/
+	}
 
 // setupBuffers() //////////////////////////////////////////////////////////////
 //
@@ -518,18 +556,7 @@ void setupBuffers() {
 
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbods[1] );
     glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( platformIndices ), platformIndices, GL_STATIC_DRAW );
-	//DUMPED CODE FOR BLUR
-	/*
-	blurShaderProgram = new CSCI441::ShaderProgram( "shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl" );
-	uniform_blur_tex_loc            = textureShaderProgram->getUniformLocation( "tex" );
-	uniform_blur_color_loc          = textureShaderProgram->getUniformLocation( "color" );
-	uniform_blur_dir_loc    	 = textureShaderProgram->getUniformLocation("dir");
-	uniform_blur_radius_loc		 = textureShaderProgram->getUniformLocation("radius");
-	uniform_blur_rez_loc	     = textureShaderProgram->getUniformLocation("rez");
-	attrib_blur_vPos_loc            = textureShaderProgram->getAttributeLocation( "vPos" );
-	attrib_blur_vTextureCoord_loc   = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
-	*/
-
+	
 	//blurTagrgetA = new FrameBuffer(FBO_SIZE, FBO_SIZE, Texture.LINEAR);
 	//blurTagrgetB = new FrameBuffer(FBO_SIZE, FBO_SIZE, Texture.LINEAR);
 
@@ -672,6 +699,32 @@ void setupBuffers() {
     glVertexAttribPointer( attrib_vPos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) 0 );
     glEnableVertexAttribArray( attrib_vTextureCoord_loc );
     glVertexAttribPointer( attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3) );
+  //////////////////////////////////////////
+  //
+  // TEXTURED QUAD
+  // LOOKHERE #1
+
+  VertexTextured texturedQuadVerts[4] = {
+	  { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f }, // 0 - BL
+	  { 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f }, // 1 - BR
+	  { -1.0f, 1.0f,  0.0f, 0.0f, 1.0f }, // 2 - TL
+	  { 1.0f,  1.0f,  0.0f, 1.0f, 1.0f }  // 3 - TR
+  };
+
+  unsigned short texturedQuadIndices[4] = { 0, 1, 2, 3 };
+
+  glGenVertexArrays(1, &texturedQuadVAO);
+  glBindVertexArray(texturedQuadVAO);
+  glGenBuffers(2, vbods);
+  glBindBuffer(GL_ARRAY_BUFFER, vbods[0]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(texturedQuadVerts), texturedQuadVerts, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbods[1]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(texturedQuadIndices), texturedQuadIndices, GL_STATIC_DRAW);
+  postprocessingShaderProgram->useProgram();
+  glEnableVertexAttribArray(attrib_post_vpos_loc);
+  glVertexAttribPointer(attrib_post_vpos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void *)0);
+  glEnableVertexAttribArray(attrib_post_vtex_loc);
+  glVertexAttribPointer(attrib_post_vtex_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void *)(sizeof(float) * 3));
 
     //////////////////////////////////////////
     //
@@ -692,9 +745,10 @@ void setupBuffers() {
     glEnableVertexAttribArray( vpos_tree_attrib_location );
     glVertexAttribPointer( vpos_tree_attrib_location, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0 );
 
+
+
 }
 
-/*
 void setupFramebuffer() {
 // TODO #1 - Setup everything with the framebuffer
 glGenFramebuffers(1, &fbo);
@@ -720,7 +774,6 @@ CSCI441::FramebufferUtils::printFramebufferStatusMessage(GL_FRAMEBUFFER);
 CSCI441::FramebufferUtils::printFramebufferInfo(GL_FRAMEBUFFER, fbo);
 
 }
-*/
 
 void setLights() {
 	glm::vec3 beerLoc = marbles[1]->location;
@@ -1044,11 +1097,18 @@ void collideMarblesWithEachother() {
                                     marbles[0]->radius + marbles[0]->location.y,
                                     marbles[0]->location.z));
         if( dist < marbles[i]->radius + marbles[0]->radius){
+            //Collect Beers
             if (i < 4){
+                beers++;
+                b_distance+=b_dist_inc;
+                alpha *= alpha_ratio;
                 marbles[i]->location = glm::vec3(   randRange(-groundSize, groundSize),
                                                     0,
                                                     randRange(-groundSize, groundSize));
-                if ( i == 3 || numMarbles > 6){
+
+                
+                // Spawn officer
+                if ( randRange(0,2) < 1 || numMarbles > 6){
                     glm::vec3 loc = marbles[i]->location;
                     float inside = 0.7;
                     speedRatio += speedIncrease*(1.1 - speedRatio);
@@ -1129,6 +1189,7 @@ int main( int argc, char *argv[] ) {
     setupShaders();                                        // load our shaders into memory
     setupBuffers();                                        // load all our VAOs and VBOs into memory
     setupTextures();                                    // load all textures into memory
+    setupFramebuffer();
     populateMarbles();                                // generate marbles
 	CSCI441::setVertexAttributeLocations(vpos_light_attrib_location);
     convertSphericalToCartesian();        // set up our camera position
@@ -1143,10 +1204,7 @@ int main( int argc, char *argv[] ) {
     //    window will display once and then the program exits.
     double last_update  = glfwGetTime();
     while( !glfwWindowShouldClose(window) ) {    // check if the window was instructed to be closed
-        glDrawBuffer( GL_BACK );                // work with our back frame buffer
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );    // clear the current color contents and depth buffer in the window
-
-		/*
+		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glViewport(0, 0, framebufferWidth, framebufferHeight);
 		glClear(GL_COLOR_BUFFER_BIT |
@@ -1155,14 +1213,27 @@ int main( int argc, char *argv[] ) {
 		// set the projection matrix based on the window size
 		// use a perspective projection that ranges
 		// with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
-		glm::mat4 projectionMatrix = glm::perspective(45.0f, framebufferWidth / (float)framebufferHeight, 0.001f, 100.0f);
+		glm::mat4 projectionMatrix = glm::perspective(45.0f, framebufferWidth / (float)framebufferHeight, 0.001f, 10000.0f);
 
-		// set up our look at matrix to position our camera
-		glm::mat4 viewMatrix = glm::lookAt(eyePoint, lookAtPoint, upVector);
-
-		// pass our view and projection matrices
-		renderScene(viewMatrix, projectionMatrix);
 		//postprocessingShaderProgram->useProgram();
+		// set up our look at matrix to position our camera
+		// Camera looks at Marble
+		lookAtPoint = marbles[0]->location;
+		convertSphericalToCartesian();
+                glm::mat4 viewMatrix = glm::lookAt(eyePoint, lookAtPoint, upVector);
+		/*
+                collideMarblesWithWall();
+		collideMarblesWithEachother();
+		moveMarbles();*/
+		// pass our view and projection matrices
+        if (glfwGetTime() - last_update > 0.016) {
+            last_update = glfwGetTime();
+            collideMarblesWithWall();
+            collideMarblesWithEachother();
+            moveMarbles();
+        }
+		renderScene(viewMatrix, projectionMatrix);
+
 		glFlush();
 		/////////////////////////////
 		// SECOND PASS
@@ -1176,10 +1247,13 @@ int main( int argc, char *argv[] ) {
 		postprocessingShaderProgram->useProgram();
 		projectionMatrix = glm::ortho(-1, 1, -1, 1);
 		glUniformMatrix4fv(uniform_post_proj_loc, 1, GL_FALSE, &projectionMatrix[0][0]);
-		glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
+		sys_time += 0.01;
+                glUniform1f(uniform_post_time_loc, sys_time);
+                glUniform1f(uniform_post_dist_loc, b_distance);
+                glUniform1f(uniform_post_a_loc, alpha);
+                glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
 		glBindVertexArray(texturedQuadVAO);
 		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
-		*/
 
 		// Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
         // when using a Retina display the actual window can be larger than the requested window.  Therefore
@@ -1188,22 +1262,7 @@ int main( int argc, char *argv[] ) {
 
         // update the viewport - tell OpenGL we want to render to the whole window
         glViewport( 0, 0, windowWidth, windowHeight );
-
-        // set the projection matrix based on the window size
-        // use a perspective projection that ranges
-        // with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
-        glm::mat4 projectionMatrix = glm::perspective( 45.0f, windowWidth / (float) windowHeight, 0.001f, 10000.0f );
-
-        // set up our look at matrix to position our camera
-        // Camera looks at Marble
-        lookAtPoint = marbles[0]->location;
-        convertSphericalToCartesian();
-        glm::mat4 viewMatrix = glm::lookAt( cameraDis*eyePoint,lookAtPoint, upVector );
-
-        // draw everything to the window
-        // pass our view and projection matrices as well as deltaglfwGetTime()Time between frames
-        renderScene( viewMatrix, projectionMatrix );
-
+        
         glfwSwapBuffers(window);// flush the OpenGL commands and make sure they get rendered!
         glfwPollEvents();                // check for any events and signal to redraw screen
 
