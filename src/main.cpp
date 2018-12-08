@@ -39,7 +39,9 @@
 //******************************************************************************
 //
 // Global Parameters
-
+// has the window been moved? Move it once to make the mac window work 
+// (hack in main.cpp main loop. This flag makes it only happen once.)
+bool movedWindow = false;
 // Clock
 double start_time = glfwGetTime();
 
@@ -431,7 +433,7 @@ void setupTextures() {
     registerOpenGLTexture(brickTexData, brickTexWidth, brickTexHeight, brickTexHandle);
     printf( "[INFO]: brick texture read in and registered\n" );
 
-    platformTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/grass.jpg" );
+    platformTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/grass.png" );
     beverageTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/coors-b.png" );
     playerTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/Mines.jpg" );
     enemyTextureHandle  = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
@@ -797,21 +799,27 @@ void populateMarbles() {
 //        This method will contain all of the objects to be drawn.
 //
 ////////////////////////////////////////////////////////////////////////////////
+void drawWheels(glm::mat4 modelMtx) {
+    CSCI441::drawSolidTorus(0.15, 0.30, 10, 12);
+    glUniformMatrix4fv(uniform_modelMtx_loc, 1, GL_FALSE, &(glm::translate(modelMtx, glm::vec3(0, 0, -1)))[0][0]);
+    CSCI441::drawSolidTorus(0.15, 0.30, 10, 12);
+    glUniformMatrix4fv(uniform_modelMtx_loc, 1, GL_FALSE, &(glm::translate(modelMtx, glm::vec3(-1, 0, 0)))[0][0]);
+    CSCI441::drawSolidTorus(0.15, 0.30, 10, 12);
+    glUniformMatrix4fv(uniform_modelMtx_loc, 1, GL_FALSE, &(glm::translate(modelMtx, glm::vec3(-1, 0, -1)))[0][0]);
+    CSCI441::drawSolidTorus(0.15, 0.30, 10, 12);
+}
 void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
     // TODO TEXTURE CART
-    glm::vec3 rotationAxis = glm::cross( OKdirection, glm::vec3(0,1,0) );
-
     modelMtx = glm::translate( modelMtx, OKlocation );
     modelMtx = glm::translate( modelMtx, glm::vec3( 0, OKradius, 0 ) );
-    modelMtx = glm::rotate( modelMtx, (float)OK_rotation, rotationAxis );
+    modelMtx = glm::rotate( modelMtx, (float)OK_rotation - (float)M_PI_4, glm::vec3(0, 1, 0) );
     glUniformMatrix4fv( uniform_modelMtx_loc, 1, GL_FALSE, &modelMtx[0][0] );
 
     CSCI441::drawSolidCube(1);
-    //TODO Four Wheels
-    // drawLeftFrontWheel();
-    // drawRightWheel();
-    // drawLeftBackWheel();
-    // drawRightBackWheel();
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(0.5 * OKradius, -0.5, 0.5 * OKradius));
+    glUniformMatrix4fv(uniform_modelMtx_loc, 1, GL_FALSE, &modelMtx[0][0] );
+    drawWheels(modelMtx);
 }
 
 glm::vec3 spring(float k, float rest, glm::vec3 source, glm::vec3 dest){
@@ -1140,7 +1148,8 @@ int main( int argc, char *argv[] ) {
 
     CSCI441::drawSolidSphere( 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
     CSCI441::drawSolidCylinder( 1, 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
-    CSCI441::drawSolidTorus( 1, 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
+    CSCI441::drawSolidTorus( 0.5, 1, 10, 12 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
+    //
     CSCI441::drawSolidCube(1);
     //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
     //    until the user decides to close the window and quit the program.  Without a loop, the
@@ -1210,6 +1219,19 @@ int main( int argc, char *argv[] ) {
         glfwPollEvents();                // check for any events and signal to redraw screen
 
         // THIS IS WHERE THE MAGICAL MAGIC HAPPENS!  Move everything
+        if (glfwGetTime() - last_update > 0.016) {
+            last_update = glfwGetTime();
+            collideMarblesWithWall();
+            collideMarblesWithEachother();
+            moveMarbles();
+        }
+        // hack to make the window work on the mac without manually dragging
+        if (! movedWindow) {
+            movedWindow = true;
+            int xpos, ypos;
+            glfwGetWindowPos(window, &xpos, &ypos);
+            glfwSetWindowPos(window, xpos + 1, ypos);
+        }
     }
 
     glfwDestroyWindow( window );// clean up and close our window
