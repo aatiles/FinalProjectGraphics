@@ -64,7 +64,7 @@ glm::vec3 upVector(    0.0f,  1.0f,  0.0f );
 glm::vec3 lightPos(10.0f, 10.0f, 10.0f);
 glm::vec3 lightPos1(10.0f, 10.0f, 10.0f);
 glm::vec3 lightPos2(10.0f, 10.0f, 10.0f);
-float cameraDis = 30;
+float cameraDis = 15;
 int ctrlPress = 0; 
 
 // Platform Variables
@@ -96,7 +96,7 @@ GLint attrib_m_vPos_loc, attrib_m_vTextureCoord_loc;
 
 // Marble Variables
 std::vector< Marble* > marbles;
-GLfloat marbleRadius = 4;
+GLfloat marbleRadius = 2.5;
 GLint numMarbles = 4;
 float bump = 0.1;
 glm::vec3 marbleStart = glm::vec3(8,0,8);
@@ -108,6 +108,7 @@ GLfloat OK_rotation = 0;
 GLfloat OKradius = 1;
 GLfloat OKk = 0.1;
 GLfloat OKrest_length = 8.0;
+GLuint OKTextureHandle;
 
 // Rope Variables
 GLuint ropeVAOd;
@@ -163,7 +164,7 @@ float alpha_ratio = 0.7;
 CSCI441::ShaderProgram *treeShaderProgram = NULL;
 GLint modelview_tree_uniform_location, projection_tree_uniform_location;
 GLint vpos_tree_attrib_location;
-const int NUM_POINTS = 200;
+const int NUM_POINTS = 50;
 struct Vertex { GLfloat x, y, z; };
 Vertex points[NUM_POINTS];
 GLuint pointsVAO, pointsVBO;
@@ -295,8 +296,8 @@ static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
                         cameraAngles.x += (xpos - mousePosition.x)*0.005f;
                         cameraAngles.y += (ypos - mousePosition.y)*0.005f;
 
-                        if( cameraAngles.y < 0 ) cameraAngles.y = 0.0f + 0.001f;
-                        if( cameraAngles.y >= M_PI ) cameraAngles.y = M_PI - 0.001f;
+                        if( cameraAngles.y < M_PI/2 ) cameraAngles.y = M_PI/2 + 0.001f;
+                        if( cameraAngles.y >= M_PI*6/7 ) cameraAngles.y = M_PI*6/7 - 0.001f;
                     } else {
                         cameraDis -= (mousePosition.y - ypos)/10;
                     }
@@ -458,6 +459,7 @@ void setupTextures() {
     enemyTextureHandle  = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
     ropeTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/rope.png" );
     treeTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/goodboi.png" );
+    OKTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/MinesLogo.png" );
 }
 
 void setupShaders() {
@@ -859,7 +861,7 @@ void drawWheels(glm::mat4 modelMtx) {
     CSCI441::drawSolidTorus(0.15, 0.30, 10, 12);
 }
 void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_color_loc ) {
-    // TODO TEXTURE CART
+    glBindTexture( GL_TEXTURE_2D, OKTextureHandle);
     modelMtx = glm::translate( modelMtx, OKlocation );
     modelMtx = glm::translate( modelMtx, glm::vec3( 0, OKradius, 0 ) );
     modelMtx = glm::rotate( modelMtx, (float)OK_rotation - (float)M_PI_4, glm::vec3(0, 1, 0) );
@@ -1141,18 +1143,18 @@ void collideMarblesWithEachother() {
                 beers++;
                 b_distance+=b_dist_inc;
                 alpha *= alpha_ratio;
-                marbles[i]->location = glm::vec3(   randRange(-groundSize, groundSize),
+                marbles[i]->location = glm::vec3(   randRange(-groundSize+5, groundSize-5),
                                                     0,
-                                                    randRange(-groundSize, groundSize));
+                                                    randRange(-groundSize+5, groundSize-5));
 
                 while (abs(marbles[i]->location.x) < templeX || abs(marbles[i]->location.z) < templeZ){
-                    marbles[i]->location = glm::vec3(   randRange(-groundSize, groundSize),
+                    marbles[i]->location = glm::vec3(   randRange(-groundSize+5, groundSize-5),
                                                         0,
-                                                        randRange(-groundSize, groundSize));
+                                                        randRange(-groundSize+5, groundSize-5));
 
                 }
                 // Spawn officer
-                if ( randRange(0,2) < 1 || numMarbles > 6){
+                if ( (beers%2 == 0) || numMarbles > 6){
                     glm::vec3 loc = marbles[i]->location;
                     float inside = 0.7;
                     speedRatio += speedIncrease*(1.1 - speedRatio);

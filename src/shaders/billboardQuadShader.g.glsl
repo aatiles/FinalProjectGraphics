@@ -29,7 +29,7 @@ void main() {
     EmitVertex();
 
     // TODO #F: add 2nd point
-    gl_Position = projMatrix*(gl_in[0].gl_Position + vec4( width/2, 0, 0, 0));
+    gl_Position = projMatrix*(gl_in[0].gl_Position + vec4( width/2, 0.1, 0, 0));
     texCoordG = vec2(1,0);
     EmitVertex();
     
@@ -40,7 +40,7 @@ void main() {
     EmitVertex();
     
     // TODO #H: add 4th point
-    gl_Position = projMatrix*(gl_in[0].gl_Position + vec4( -width/2, 0, 0, 0));
+    gl_Position = projMatrix*(gl_in[0].gl_Position + vec4( -width/2, 0.1, 0, 0));
     texCoordG = vec2(0,0);
     EmitVertex();
     
