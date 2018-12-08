@@ -173,6 +173,10 @@ GLuint pointsVAO, pointsVBO;
 
 GLuint treeTextureHandle;
 
+
+// Easter Egg
+int secretKey = 0;
+GLuint secretTextureHandle;
 //******************************************************************************
 //
 // Helper Functions
@@ -261,6 +265,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         case GLFW_KEY_LEFT_CONTROL: ctrlPress = action;
             break;
         case GLFW_KEY_F: lookBack = action;
+            break;
+        case GLFW_KEY_M: skyboxHandles[2] = secretTextureHandle;
+            break;
     }
 }
 
@@ -452,7 +459,7 @@ void setupTextures() {
   fflush( stdout );
   skyboxHandles[0] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/back.png"   );   printf( "." ); fflush( stdout );
   skyboxHandles[1] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/left.png"  );   printf( "." ); fflush( stdout );
-  skyboxHandles[2] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/front.png"  );   printf( "." ); fflush( stdout );
+  skyboxHandles[2] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/frontNoM.png"  );   printf( "." ); fflush( stdout );
   skyboxHandles[3] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/right.png"   );   printf( "." ); fflush( stdout );
   skyboxHandles[4] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/bottom.png" );        printf( "." ); fflush( stdout );
   skyboxHandles[5] = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/top.png"    );   printf( "." ); fflush( stdout );
@@ -470,7 +477,8 @@ void setupTextures() {
     enemyTextureHandle  = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/ends.png" );
     ropeTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/rope.png" );
     treeTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/goodboi.png" );
-    OKTextureHandle   = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/MinesLogo.png" );
+    OKTextureHandle     = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/MinesLogo.png" );
+    secretTextureHandle = CSCI441::TextureUtils::loadAndRegisterTexture( "textures/skybox2/front.png" );
 }
 
 void setupShaders() {
