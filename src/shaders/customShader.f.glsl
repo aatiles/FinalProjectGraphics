@@ -34,10 +34,9 @@ void main() {
 	vec3 viewDir = normalize(viewPos - FragPos);
 	vec3 reflectDir = reflect(-lightDir, norm);
 	vec3 specular = pow(max(dot(viewDir, reflectDir),0.0), 32)*vec3(1.0, 1.0, 1.0);
-	float ambientStrength = 0.1;
+	float ambientStrength = 0.4;
 	vec3 ambient = ambientStrength * lightColor;
 	vec3 result = (ambient + diffuse + specular);
-	//result = vec3(1.0, 1.0, 1.0) * (dot(normalize(Normal), viewPos-FragPos) + 0.3);
 
 	//SECOND LIGHT
 	lightColor = vec3(0.0, 0.0, 1.0);
@@ -63,7 +62,4 @@ void main() {
 	
 	fragColorOut = vec4((result+result1+result2)/3, 1.0);
 
-	//fragColorOut = vec4(1.0 , 1.0 ,1.0 ,1.0 );
-	
-	//fragColorOut = vec4(theColor, 1.0);
 }

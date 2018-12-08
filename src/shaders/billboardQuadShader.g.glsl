@@ -21,8 +21,8 @@ void main() {
     //********* Vertex Calculations  **********
     //*****************************************
     // TODO #C: add first point
-    float height = 10;
-    float width = 4;
+    float height = 10; // Height of Tree
+    float width = 4; // Width of Tree
     gl_Position = projMatrix*(gl_in[0].gl_Position + vec4( width/2, height, 0, 0));
     texCoordG = vec2(1,1);
     // TODO #D: emit!
