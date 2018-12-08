@@ -80,7 +80,7 @@ GLfloat groundSize = 50;    // Size of ground
 GLuint skyboxVAOds[6];                      // all of our skybox VAOs
 GLuint skyboxHandles[6];                    // all of our skybox handles
 float skyBoxSize = 300;     // Size of Skybox
-
+float downShift = 250;
 // Shader Programs
 CSCI441::ShaderProgram* textureShaderProgram = NULL;
 GLint uniform_modelMtx_loc, uniform_viewProjetionMtx_loc, uniform_tex_loc, uniform_color_loc;
@@ -569,45 +569,45 @@ void setupBuffers() {
     };
 
     VertexTextured groundVertices[4] = {
-            { -skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
-            {  skyBoxSize, -skyBoxSize, -skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
-            { -skyBoxSize, -skyBoxSize,  skyBoxSize,   0.0f,  -1.0f }, // 2 - TL
-            {  skyBoxSize, -skyBoxSize,  skyBoxSize,   -1.0f,  -1.0f }  // 3 - TR
+            { -skyBoxSize, -downShift, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+            {  skyBoxSize, -downShift, -skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
+            { -skyBoxSize, -downShift,  skyBoxSize,   0.0f,  -1.0f }, // 2 - TL
+            {  skyBoxSize, -downShift,  skyBoxSize,   -1.0f,  -1.0f }  // 3 - TR
     };
 
     VertexTextured leftWallVerts[4] = {
-      { -skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
-      {  skyBoxSize, -skyBoxSize, -skyBoxSize,   1.0f,  0.0f }, // 1 - BR
-      { -skyBoxSize,  skyBoxSize, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
-      {  skyBoxSize,  skyBoxSize, -skyBoxSize,   1.0f,  1.0f }  // 3 - TR
+      { -skyBoxSize, -downShift, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      {  skyBoxSize, -downShift, -skyBoxSize,   1.0f,  0.0f }, // 1 - BR
+      { -skyBoxSize,  2*skyBoxSize - downShift, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      {  skyBoxSize,  2*skyBoxSize - downShift, -skyBoxSize,   1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured rightWallVerts[4] = {
-      { -skyBoxSize, -skyBoxSize,  skyBoxSize,   0.0f,  0.0f }, // 0 - BL
-      {  skyBoxSize, -skyBoxSize,  skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
-      { -skyBoxSize,  skyBoxSize,  skyBoxSize,   0.0f,  1.0f }, // 2 - TL
-      {  skyBoxSize,  skyBoxSize,  skyBoxSize,   -1.0f,  1.0f }  // 3 - TR
+      { -skyBoxSize, -downShift,  skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      {  skyBoxSize, -downShift,  skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
+      { -skyBoxSize,  2*skyBoxSize - downShift,  skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      {  skyBoxSize,  2*skyBoxSize - downShift,  skyBoxSize,   -1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured backWallVerts[4] = {
-      { -skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
-      { -skyBoxSize, -skyBoxSize,  skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
-      { -skyBoxSize,  skyBoxSize, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
-      { -skyBoxSize,  skyBoxSize,  skyBoxSize,   -1.0f,  1.0f }  // 3 - TR
+      { -skyBoxSize, -downShift, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      { -skyBoxSize, -downShift,  skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
+      { -skyBoxSize,  2*skyBoxSize - downShift, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      { -skyBoxSize,  2*skyBoxSize - downShift,  skyBoxSize,   -1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured frontWallVerts[4] = {
-      {  skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
-      {  skyBoxSize, -skyBoxSize,  skyBoxSize,   1.0f,  0.0f }, // 1 - BR
-      {  skyBoxSize,  skyBoxSize, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
-      {  skyBoxSize,  skyBoxSize,  skyBoxSize,   1.0f,  1.0f }  // 3 - TR
+      {  skyBoxSize, -downShift, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
+      {  skyBoxSize, -downShift,  skyBoxSize,   1.0f,  0.0f }, // 1 - BR
+      {  skyBoxSize,  2*skyBoxSize - downShift, -skyBoxSize,   0.0f,  1.0f }, // 2 - TL
+      {  skyBoxSize,  2*skyBoxSize - downShift,  skyBoxSize,   1.0f,  1.0f }  // 3 - TR
     };
 
     VertexTextured topWallVerts[4] = {
-            { -skyBoxSize,  skyBoxSize, -skyBoxSize,   1.0f,  -1.0f }, // 0 - BL
-            {  skyBoxSize,  skyBoxSize, -skyBoxSize,   1.0f,  0.0f }, // 1 - BR
-            { -skyBoxSize,  skyBoxSize,  skyBoxSize,   0.0f,  -1.0f }, // 2 - TL
-            {  skyBoxSize,  skyBoxSize,  skyBoxSize,   0.0f,  0.0f }  // 3 - TR
+            { -skyBoxSize,  2*skyBoxSize - downShift, -skyBoxSize,   1.0f,  -1.0f }, // 0 - BL
+            {  skyBoxSize,  2*skyBoxSize - downShift, -skyBoxSize,   1.0f,  0.0f }, // 1 - BR
+            { -skyBoxSize,  2*skyBoxSize - downShift,  skyBoxSize,   0.0f,  -1.0f }, // 2 - TL
+            {  skyBoxSize,  2*skyBoxSize - downShift,  skyBoxSize,   0.0f,  0.0f }  // 3 - TR
     };
 
     glGenVertexArrays( 6, skyboxVAOds );
