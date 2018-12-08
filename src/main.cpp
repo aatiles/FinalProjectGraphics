@@ -57,15 +57,15 @@ glm::vec2 mousePosition( -9999.0f, -9999.0f );
 
 
 //Camera Variables
-glm::vec3 cameraAngles( 1.82f, 2.01f, 25.0f );
-glm::vec3 eyePoint(   5.0f, 5.0f, 5.0f );
-glm::vec3 lookAtPoint( 0.0f,  0.0f,  0.0f );
-glm::vec3 upVector(    0.0f,  1.0f,  0.0f );
-glm::vec3 lightPos(10.0f, 10.0f, 10.0f);
-glm::vec3 lightPos1(10.0f, 10.0f, 10.0f);
-glm::vec3 lightPos2(10.0f, 10.0f, 10.0f);
-float cameraDis = 15;
-int ctrlPress = 0; 
+glm::vec3 cameraAngles( 1.82f, 2.01f, 25.0f );  // Angle of camera
+glm::vec3 eyePoint(   5.0f, 5.0f, 5.0f );       // Location of eye. Based on angle of camera
+glm::vec3 lookAtPoint( 0.0f,  0.0f,  0.0f );    // Where the camera is looking. Based on hero location.
+glm::vec3 upVector(    0.0f,  1.0f,  0.0f );    // Up vector. Changes with drunkness.
+glm::vec3 lightPos(10.0f, 10.0f, 10.0f);        // Light based on locatio of beer 1
+glm::vec3 lightPos1(10.0f, 10.0f, 10.0f);       // Light based on location of beer 2
+glm::vec3 lightPos2(10.0f, 10.0f, 10.0f);       // Light based on location of beer 3
+float cameraDis = 15;                           // Distance Camera is away from the hero
+int ctrlPress = 0;                              // State of the CTRL key
 
 // Platform Variables
 struct VertexTextured {
@@ -74,61 +74,61 @@ struct VertexTextured {
 };
 GLuint platformVAOd;
 GLuint platformTextureHandle;
-GLfloat groundSize = 50;
+GLfloat groundSize = 50;    // Size of ground
 
 // Skybox Variables
-GLuint skyboxVAOds[6];                                            // all of our skybox VAOs
+GLuint skyboxVAOds[6];                      // all of our skybox VAOs
 GLuint skyboxHandles[6];                    // all of our skybox handles
-float skyBoxSize = 300;
+float skyBoxSize = 300;     // Size of Skybox
 
 // Shader Programs
 CSCI441::ShaderProgram* textureShaderProgram = NULL;
 GLint uniform_modelMtx_loc, uniform_viewProjetionMtx_loc, uniform_tex_loc, uniform_color_loc;
 GLint attrib_vPos_loc, attrib_vTextureCoord_loc;
 GLuint brickTexHandle;
-
-GLuint beverageTextureHandle;
-GLuint playerTextureHandle;
-GLuint enemyTextureHandle;
 CSCI441::ShaderProgram* marbleShaderProgram = NULL;
 GLint uniform_m_modelMtx_loc, uniform_m_viewProjetionMtx_loc, uniform_m_tex_loc, uniform_m_color_loc;
 GLint attrib_m_vPos_loc, attrib_m_vTextureCoord_loc;
 
 // Marble Variables
 std::vector< Marble* > marbles;
-GLfloat marbleRadius = 2.5;
-GLint numMarbles = 4;
-float bump = 0.1;
-glm::vec3 marbleStart = glm::vec3(8,0,8);
+GLfloat marbleRadius = 2.5;                 // How big the enemies are
+GLint numMarbles = 4;                       // Number of objects in our particle system
+float bump = 0.1;                           // Used for collision resolution
+glm::vec3 marbleStart = glm::vec3(12,0,12); // Start location of the hero
+GLuint beverageTextureHandle;
+GLuint playerTextureHandle;
+GLuint enemyTextureHandle;
 
 //OreKart Variables
-glm::vec3 OKlocation(0,0,0);
-glm::vec3 OKdirection;
-GLfloat OK_rotation = 0;
-GLfloat OKradius = 1;
-GLfloat OKk = 0.1;
-GLfloat OKrest_length = 8.0;
+glm::vec3 OKlocation(20,0,20);  // Starting location of the OreKart
+glm::vec3 OKdirection;          // Direction the OreKart is facing
+GLfloat OK_rotation = 0;        // Direction the OreKart is rotating
+GLfloat OKradius = 1;           // Collision radius of the OreKart
+GLfloat OKk = 0.1;              // Spring constant for the OreKart
+GLfloat OKrest_length = 8.0;    // Default resting length of the OreKart
 GLuint OKTextureHandle;
 
 // Rope Variables
 GLuint ropeVAOd;
 GLuint ropeTextureHandle;
 GLuint ropeVbod;
-const int ropeSize = 12;
-VertexTextured ropeVertices[ropeSize];
-float ropeMass = 0.001;
-float ropeK = 10.0;
-float ropeRest = 0.9*OKrest_length/(float) (ropeSize - 1);
-float ropeTimeScale = 0.1;
-int ropeRender = 30;
+const int ropeSize = 20;                    // Number of segments in the rope
+VertexTextured ropeVertices[ropeSize];      // List to hold the rope segments
+float ropeMass = 0.001;                     // Mass of each rope segment
+float ropeK = 10.0;                         // Spring constant for the rope
+float ropeRest = 
+    .6*OKrest_length/(float) (ropeSize - 1);// Resting length of the rope springs
+float ropeTimeScale = 0.1;                  // How much the rope moves 
+int ropeRender = 30;                        // Number of times the rope physics is exectued
 
 // Movement Variables
-int goingForward = 0;
-int goingBackward = 0;
-int turnLeft = 0;
-int turnRight = 0;
-float speedRatio = 0.01;
-float speedIncrease = 0.1;
+int goingForward = 0;           // State of W Key
+int goingBackward = 0;          // State of S Key
+int turnLeft = 0;               // State of A Key
+int turnRight = 0;              // State of D Key
+float speedRatio = 0.01;        // Speed at which the cops start out
+float speedIncrease = 0.2;      // Speed at which cops speed increase. Logistic growth.
 
 // For model
 CSCI441::ShaderProgram *lightingProgramHandle = NULL;
@@ -141,8 +141,8 @@ GLint normalAttLoc;
 GLint viewUniformLoc;
 GLint modelUniLoc;
 CSCI441::ModelLoader* model = NULL;
-float templeX = 7;
-float templeZ = 5;
+float templeX = 7;  // Length of the Temple
+float templeZ = 5;  // Width of the Temple
 
 //FBO Stuff
 GLuint fbo;
@@ -154,11 +154,12 @@ GLint uniform_post_proj_loc, uniform_post_fbo_loc, uniform_post_time_loc;
 GLint attrib_post_vpos_loc, attrib_post_vtex_loc;
 GLint uniform_post_dist_loc, uniform_post_a_loc;
 GLuint texturedQuadVAO;
-int beers = 0;
-float b_distance=0;
-float b_dist_inc = 0.003;
-float alpha=1;
-float alpha_ratio = 0.7;
+int beers = 0;                  // Number of beers collected
+float b_distance=0;             // Blurr distance
+float b_dist_inc = 0.003;       // Blur distance increment
+float alpha=1;                  // Beginning ratio of clearness
+float alpha_ratio = 0.7;        // Rate at which we distribute our focus to seeing double
+float sys_time = 0;             // Timing variable to vary over time
 
 //Trees
 CSCI441::ShaderProgram *treeShaderProgram = NULL;
@@ -170,9 +171,6 @@ Vertex points[NUM_POINTS];
 GLuint pointsVAO, pointsVBO;
 
 GLuint treeTextureHandle;
-
-// System Time
-float sys_time = 0;
 
 //******************************************************************************
 //
@@ -186,11 +184,13 @@ float sys_time = 0;
 //
 ////////////////////////////////////////////////////////////////////////////////
 void convertSphericalToCartesian() {
+    // Define eye point based on camera distance and camera angle. 
     eyePoint.x = lookAtPoint.x + cameraDis * sinf( cameraAngles.x ) * sinf( cameraAngles.y );
     eyePoint.y = lookAtPoint.y + cameraDis * -cosf( cameraAngles.y );
     eyePoint.z = lookAtPoint.z + cameraDis * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );}
 
 float randRange(float min, float max){
+    // Return a random float in a given range
     return rand()/(float) RAND_MAX * (max-min) + min;
 }
 
@@ -463,22 +463,22 @@ void setupTextures() {
 }
 
 void setupShaders() {
-	//Model Shading
-	lightingProgramHandle = new CSCI441::ShaderProgram("shaders/customShader.v.glsl", "shaders/customShader.f.glsl");
-	mvp_lights_location = lightingProgramHandle->getUniformLocation( "mvpMatrix");
-	if (mvp_lights_location < 0)
-		printf("[ERROR]: mvp_lights_location is negative\n");
-	vpos_light_attrib_location = lightingProgramHandle->getAttributeLocation("vPosition");
-	if (vpos_light_attrib_location < 0)
-		printf("[ERROR]: vpos_light_attrib_location is negative\n");
-	//Lighting things
-	lightPosUniLoc = lightingProgramHandle -> getUniformLocation("lightPos");
-	lightPos1UniLoc = lightingProgramHandle->getUniformLocation("lightPos1");
-	lightPos2UniLoc = lightingProgramHandle->getUniformLocation("lightPos2");
-	modelUniLoc = lightingProgramHandle -> getUniformLocation( "model");
-	normalAttLoc = lightingProgramHandle -> getAttributeLocation("aNormal");
-	viewUniformLoc = lightingProgramHandle->getUniformLocation("viewPos");
-
+    //Model Shading
+    lightingProgramHandle = new CSCI441::ShaderProgram("shaders/customShader.v.glsl", "shaders/customShader.f.glsl");
+    mvp_lights_location = lightingProgramHandle->getUniformLocation( "mvpMatrix");
+    if (mvp_lights_location < 0)
+        printf("[ERROR]: mvp_lights_location is negative\n");
+    vpos_light_attrib_location = lightingProgramHandle->getAttributeLocation("vPosition");
+    if (vpos_light_attrib_location < 0)
+        printf("[ERROR]: vpos_light_attrib_location is negative\n");
+    //Lighting things
+    lightPosUniLoc = lightingProgramHandle -> getUniformLocation("lightPos");
+    lightPos1UniLoc = lightingProgramHandle->getUniformLocation("lightPos1");
+    lightPos2UniLoc = lightingProgramHandle->getUniformLocation("lightPos2");
+    modelUniLoc = lightingProgramHandle -> getUniformLocation( "model");
+    normalAttLoc = lightingProgramHandle -> getAttributeLocation("aNormal");
+    viewUniformLoc = lightingProgramHandle->getUniformLocation("viewPos");
+    //Texturing Things
     textureShaderProgram = new CSCI441::ShaderProgram( "shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
     uniform_modelMtx_loc         = textureShaderProgram->getUniformLocation( "modelMtx" );
     uniform_viewProjetionMtx_loc = textureShaderProgram->getUniformLocation( "viewProjectionMtx" );
@@ -486,7 +486,7 @@ void setupShaders() {
     uniform_color_loc             = textureShaderProgram->getUniformLocation( "color" );
     attrib_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
-
+    //Texturing Solid Object
     marbleShaderProgram = new CSCI441::ShaderProgram( "shaders/marbleShader.v.glsl", "shaders/marbleShader.f.glsl" );
     uniform_m_modelMtx_loc         = textureShaderProgram->getUniformLocation( "modelMtx" );
     uniform_m_viewProjetionMtx_loc = textureShaderProgram->getUniformLocation( "viewProjectionMtx" );
@@ -494,36 +494,24 @@ void setupShaders() {
     uniform_m_color_loc             = textureShaderProgram->getUniformLocation( "color" );
     attrib_m_vPos_loc                 = textureShaderProgram->getAttributeLocation( "vPos" );
     attrib_m_vTextureCoord_loc      = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
-
+    // Texturing trees
     treeShaderProgram   = new CSCI441::ShaderProgram("shaders/billboardQuadShader.v.glsl",
                                                 "shaders/billboardQuadShader.g.glsl",
                                                 "shaders/billboardQuadShader.f.glsl" );
     modelview_tree_uniform_location  = treeShaderProgram->getUniformLocation( "mvMatrix" );
     projection_tree_uniform_location = treeShaderProgram->getUniformLocation( "projMatrix" );
     vpos_tree_attrib_location        = treeShaderProgram->getAttributeLocation( "vPos" );
+    // Drunk Shader
+    postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl");
+    uniform_post_proj_loc = postprocessingShaderProgram->getUniformLocation("projectionMtx");
+    uniform_post_fbo_loc = postprocessingShaderProgram->getUniformLocation("fbo");
+    uniform_post_time_loc = postprocessingShaderProgram->getUniformLocation("systime");
+    uniform_post_dist_loc = postprocessingShaderProgram->getUniformLocation("distance");
+    uniform_post_a_loc = postprocessingShaderProgram->getUniformLocation("a");
+    attrib_post_vpos_loc = postprocessingShaderProgram->getAttributeLocation("vPos");
+    attrib_post_vtex_loc = postprocessingShaderProgram->getAttributeLocation("vTexCoord");
 
-
-	postprocessingShaderProgram = new CSCI441::ShaderProgram("shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl");
-	uniform_post_proj_loc = postprocessingShaderProgram->getUniformLocation("projectionMtx");
-	uniform_post_fbo_loc = postprocessingShaderProgram->getUniformLocation("fbo");
-	uniform_post_time_loc = postprocessingShaderProgram->getUniformLocation("systime");
-	uniform_post_dist_loc = postprocessingShaderProgram->getUniformLocation("distance");
-	uniform_post_a_loc = postprocessingShaderProgram->getUniformLocation("a");
-	attrib_post_vpos_loc = postprocessingShaderProgram->getAttributeLocation("vPos");
-	attrib_post_vtex_loc = postprocessingShaderProgram->getAttributeLocation("vTexCoord");
-
-	//DUMPED CODE FOR BLUR
-	/*
-	blurShaderProgram = new CSCI441::ShaderProgram( "shaders/blurShader.v.glsl", "shaders/blurShader.f.glsl" );
-	uniform_blur_tex_loc            = textureShaderProgram->getUniformLocation( "tex" );
-	uniform_blur_color_loc          = textureShaderProgram->getUniformLocation( "color" );
-	uniform_blur_dir_loc    	 = textureShaderProgram->getUniformLocation("dir");
-	uniform_blur_radius_loc		 = textureShaderProgram->getUniformLocation("radius");
-	uniform_blur_rez_loc	     = textureShaderProgram->getUniformLocation("rez");
-	attrib_blur_vPos_loc            = textureShaderProgram->getAttributeLocation( "vPos" );
-	attrib_blur_vTextureCoord_loc   = textureShaderProgram->getAttributeLocation( "vTextureCoord" );
-	*/
-	}
+    }
 
 // setupBuffers() //////////////////////////////////////////////////////////////
 //
@@ -531,9 +519,14 @@ void setupShaders() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void setupBuffers() {
-	model = new CSCI441::ModelLoader();
-	CSCI441::ModelLoader::enableAutoGenerateNormals();
-	model->loadModelFile("models/temple.obj");
+    //////////////////////////////////////////
+    //
+    // Load Temple Model
+    model = new CSCI441::ModelLoader();
+    CSCI441::ModelLoader::enableAutoGenerateNormals();
+    model->loadModelFile("models/temple.obj");
+
+
     //////////////////////////////////////////
     //
     // PLATFORM
@@ -566,9 +559,6 @@ void setupBuffers() {
 
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, vbods[1] );
     glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( platformIndices ), platformIndices, GL_STATIC_DRAW );
-	
-	//blurTagrgetA = new FrameBuffer(FBO_SIZE, FBO_SIZE, Texture.LINEAR);
-	//blurTagrgetB = new FrameBuffer(FBO_SIZE, FBO_SIZE, Texture.LINEAR);
 
     //////////////////////////////////////////
     //
@@ -577,7 +567,7 @@ void setupBuffers() {
     unsigned short groundIndices[4] = {
         0, 1, 2, 3
     };
-   
+
     VertexTextured groundVertices[4] = {
             { -skyBoxSize, -skyBoxSize, -skyBoxSize,   0.0f,  0.0f }, // 0 - BL
             {  skyBoxSize, -skyBoxSize, -skyBoxSize,   -1.0f,  0.0f }, // 1 - BR
@@ -709,16 +699,16 @@ void setupBuffers() {
     glVertexAttribPointer( attrib_vPos_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) 0 );
     glEnableVertexAttribArray( attrib_vTextureCoord_loc );
     glVertexAttribPointer( attrib_vTextureCoord_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexTextured), (void*) (sizeof(float) * 3) );
+
   //////////////////////////////////////////
   //
-  // TEXTURED QUAD
-  // LOOKHERE #1
+  // FBO Box
 
   VertexTextured texturedQuadVerts[4] = {
-	  { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f }, // 0 - BL
-	  { 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f }, // 1 - BR
-	  { -1.0f, 1.0f,  0.0f, 0.0f, 1.0f }, // 2 - TL
-	  { 1.0f,  1.0f,  0.0f, 1.0f, 1.0f }  // 3 - TR
+      { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f }, // 0 - BL
+      { 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f }, // 1 - BR
+      { -1.0f, 1.0f,  0.0f, 0.0f, 1.0f }, // 2 - TL
+      { 1.0f,  1.0f,  0.0f, 1.0f, 1.0f }  // 3 - TR
   };
 
   unsigned short texturedQuadIndices[4] = { 0, 1, 2, 3 };
@@ -739,6 +729,7 @@ void setupBuffers() {
     //////////////////////////////////////////
     //
     // Trees
+
     for( int i = 0; i < NUM_POINTS; i++ ) {
         Vertex v = {    randRange(-groundSize, groundSize),
                         0,
@@ -765,7 +756,6 @@ void setupBuffers() {
 }
 
 void setupFramebuffer() {
-// TODO #1 - Setup everything with the framebuffer
 glGenFramebuffers(1, &fbo);
 glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -773,11 +763,11 @@ GLuint rbo;
 glGenRenderbuffers(1, &rbo);
 glBindRenderbuffer(GL_RENDERBUFFER, rbo);
 glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, framebufferWidth, framebufferHeight);
-glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,	rbo);
+glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,    rbo);
 
 glGenTextures(1, &framebufferTextureHandle);
 glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
-glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,	framebufferWidth, framebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,    framebufferWidth, framebufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -791,19 +781,19 @@ CSCI441::FramebufferUtils::printFramebufferInfo(GL_FRAMEBUFFER, fbo);
 }
 
 void setLights() {
-	glm::vec3 beerLoc = marbles[1]->location;
-	glm::vec3 beerLoc1 = marbles[2]->location;
-	glm::vec3 beerLoc2 = marbles[3]->location;
-	lightPos = glm::vec3(beerLoc.x, 10, beerLoc.z);
-	lightPos1 = glm::vec3(beerLoc1.x, 10, beerLoc1.z);
-	lightPos2 = glm::vec3(beerLoc2.x, 10, beerLoc2.z);
+    // Set lighting based on beer location
+    glm::vec3 beerLoc = marbles[1]->location;
+    glm::vec3 beerLoc1 = marbles[2]->location;
+    glm::vec3 beerLoc2 = marbles[3]->location;
+    lightPos = glm::vec3(beerLoc.x, 10, beerLoc.z);
+    lightPos1 = glm::vec3(beerLoc1.x, 10, beerLoc1.z);
+    lightPos2 = glm::vec3(beerLoc2.x, 10, beerLoc2.z);
 }
 void populateMarbles() {
     srand( time(NULL) );
     float rangeX = groundSize*2;
     float rangeZ = groundSize*2;
     for(int i = 0; i < numMarbles; i++) {
-        // TODO: Populate our marble locations
         Marble* m = new Marble( glm::vec3( rand()/(float)RAND_MAX * rangeX - rangeX/2.0f,
                                 0.0f,
                                (rangeZ * (i/(float)numMarbles)) - rangeZ/2.0f),
@@ -875,6 +865,7 @@ void drawOreKart(glm::mat4 modelMtx, GLint uniform_modelMtx_loc, GLint uniform_c
 }
 
 glm::vec3 spring(float k, float rest, glm::vec3 source, glm::vec3 dest){
+    // Function to calulate spring force
     glm::vec3 dir = dest-source;
     float dist = glm::length(dir);
     if (dist-rest > -OKrest_length)
@@ -885,6 +876,7 @@ glm::vec3 spring(float k, float rest, glm::vec3 source, glm::vec3 dest){
 void moveOreKart(){
     glm::vec3 heading = marbles[0]->location - OKlocation;
     float mag = OKk*(glm::length(heading) - OKrest_length);
+    // Apply force to Orekart equal to spring from Hero
     if (mag > 0){
         OKdirection = OKk*(glm::length(heading) - OKrest_length)*heading;
         OKlocation = OKlocation + OKdirection;
@@ -893,6 +885,8 @@ void moveOreKart(){
 }
 
 void moveRope(){
+    // Move the Rope System
+    // Set the ends of the rope to the Hero and the OreKart
     glm::vec3 heroLoc = marbles[0]->location;
     ropeVertices[0].x = heroLoc.x;
     ropeVertices[0].y = marbles[0]->radius;
@@ -901,47 +895,47 @@ void moveRope(){
     ropeVertices[ropeSize - 1].x = OKlocation.x;
     ropeVertices[ropeSize - 1].z = OKlocation.z;
 
-    glm::vec3 g = glm::vec3(0,ropeMass*-9.81,0);
+    glm::vec3 g = glm::vec3(0,ropeMass*-9.81,0); // gravity
     for (int j = 0; j < ropeRender; j++){
         for (int i = 1; i < ropeSize-1; i++){
+            // Sum of forces
             VertexTextured r1 = ropeVertices[i-1];
             VertexTextured r2 = ropeVertices[i];
             VertexTextured r3 = ropeVertices[i+1];
+            // Force from previous point
             glm::vec3 f1 = spring(ropeK, ropeRest, glm::vec3(r2.x, r2.y, r2.z), glm::vec3(r1.x, r1.y, r1.z));
+            // Force from current point
             glm::vec3 f2 = spring(ropeK, ropeRest, glm::vec3(r2.x, r2.y, r2.z), glm::vec3(r3.x, r3.y, r3.z));
             glm::vec3 sumF = g + f1 + f2;
-            sumF = glm::normalize(sumF);
+            // If the force is large, reduce it
+            if (glm::length(sumF) > ropeTimeScale)
+                sumF = glm::normalize(sumF);
             ropeVertices[i].x += sumF.x * ropeTimeScale;
             ropeVertices[i].y += sumF.y * ropeTimeScale;
             if (ropeVertices[i].y < 0){
                 ropeVertices[i].y = 0;
             }
             ropeVertices[i].z += sumF.z * ropeTimeScale;
-            /*
-            if (i == 1){
-                printf("Rope 1 %f %f %f\n", ropeVertices[1].x, ropeVertices[1].y, ropeVertices[1].z);
-                printf("Force 1 %f %f %f\n", sumF.x, sumF.y, sumF.z);
-            }*/
         }
     }
 }
 
 void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
-	// stores our model matrix
-	glm::mat4 modelMtx;
-	//glEnable(GL_TEXTURE_2D);					// enable 2D texturing
-	// use our shader program
-	// precompute our MVP CPU side so it only needs to be computed once
-	glm::mat4 mvpMtx = projectionMatrix * viewMatrix * modelMtx;
+    // stores our model matrix
+    glm::mat4 modelMtx;
+    //glEnable(GL_TEXTURE_2D);                    // enable 2D texturing
+    // use our shader program
+    // precompute our MVP CPU side so it only needs to be computed once
+    glm::mat4 mvpMtx = projectionMatrix * viewMatrix * modelMtx;
 
-	lightingProgramHandle->useProgram();
-	glUniformMatrix4fv(mvp_lights_location, 1, GL_FALSE, &mvpMtx[0][0]);
-	glUniformMatrix4fv(modelUniLoc, 1, GL_FALSE, &modelMtx[0][0]);
-	glUniform3fv(lightPosUniLoc, 1, &lightPos[0]);
-	glUniform3fv(lightPos1UniLoc, 1, &lightPos1[0]);
-	glUniform3fv(lightPos2UniLoc, 1, &lightPos2[0]);
-	glUniform3fv(viewUniformLoc, 1, &eyePoint[0]);
-	model->draw(vpos_light_attrib_location, normalAttLoc);
+    lightingProgramHandle->useProgram();
+    glUniformMatrix4fv(mvp_lights_location, 1, GL_FALSE, &mvpMtx[0][0]);
+    glUniformMatrix4fv(modelUniLoc, 1, GL_FALSE, &modelMtx[0][0]);
+    glUniform3fv(lightPosUniLoc, 1, &lightPos[0]);
+    glUniform3fv(lightPos1UniLoc, 1, &lightPos1[0]);
+    glUniform3fv(lightPos2UniLoc, 1, &lightPos2[0]);
+    glUniform3fv(viewUniformLoc, 1, &eyePoint[0]);
+    model->draw(vpos_light_attrib_location, normalAttLoc);
 
     CSCI441::setVertexAttributeLocations( attrib_vPos_loc, -1, attrib_vTextureCoord_loc );
     // Draw Scenery
@@ -970,7 +964,6 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
     glBindBuffer( GL_ARRAY_BUFFER, ropeVbod );
     glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(ropeVertices), ropeVertices);
     glBindTexture( GL_TEXTURE_2D, ropeTextureHandle);
-    //glDrawElements( GL_LINE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0 );
     glDrawArrays( GL_LINE_STRIP, 0, ropeSize);
 
     // Draw Marbles
@@ -979,7 +972,6 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
     glUniformMatrix4fv(uniform_m_viewProjetionMtx_loc, 1, GL_FALSE, &vp[0][0]);
     glUniform1ui(uniform_m_tex_loc, GL_TEXTURE0);
 
-    //glBindTexture( GL_TEXTURE_2D, brickTexHandle );
     for( unsigned int i = 0; i < marbles.size(); i++ ) {
         if (i == 0)
             glBindTexture( GL_TEXTURE_2D, playerTextureHandle);
@@ -995,26 +987,18 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
 
     // Trees
     CSCI441::setVertexAttributeLocations( vpos_tree_attrib_location );
-  // stores our model matrix
-  modelMtx = glm::mat4(1.0,0.0,0.0,0.0,
-                 0.0,1.0,0.0,0.0,
-                 0.0,0.0,1.0,0.0,
-                 0.0,0.0,0.0,1.0);
+    modelMtx = glm::mat4(1.0,0.0,0.0,0.0,
+                         0.0,1.0,0.0,0.0,
+                         0.0,0.0,1.0,0.0,
+                         0.0,0.0,0.0,1.0);
 
-  // use our shader program
     treeShaderProgram->useProgram();
-
-  // precompute our MVP CPU side so it only needs to be computed once
-  glm::mat4 mvMtx = viewMatrix * modelMtx;;
-  // send MVP to GPU
-  glUniformMatrix4fv(modelview_tree_uniform_location, 1, GL_FALSE, &mvMtx[0][0]);
-  glUniformMatrix4fv(projection_tree_uniform_location, 1, GL_FALSE, &projectionMatrix[0][0]);
-
+    glm::mat4 mvMtx = viewMatrix * modelMtx;;
+    glUniformMatrix4fv(modelview_tree_uniform_location, 1, GL_FALSE, &mvMtx[0][0]);
+    glUniformMatrix4fv(projection_tree_uniform_location, 1, GL_FALSE, &projectionMatrix[0][0]);
     glBindVertexArray( pointsVAO );
-    // TODO #2 : send our sorted data
     glBindBuffer( GL_ARRAY_BUFFER, pointsVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(points), points);
-    // LOOKHERE #4
     glBindTexture( GL_TEXTURE_2D, treeTextureHandle );
     glDrawArrays( GL_POINTS, 0, NUM_POINTS );
 
@@ -1022,13 +1006,11 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
 }
 
 glm::vec3 collide(glm::vec3 vec_in, glm::vec3 norm){
+    // Given a directino and a normal, provide the angle of incidence
     return vec_in - 2*glm::dot(vec_in, norm)*norm;
 }
 
 void moveMarbles() {
-    // Change Camera to face same direction as marble
-    //marbles[0]->direction = glm::normalize(glm::vec3(lookAtPoint.x-eyePoint.x, 0, lookAtPoint.x-eyePoint.z));
-    
     // Move Hero
     if (goingForward == GLFW_PRESS || goingForward == GLFW_REPEAT || marbles[0]->direction.y == -1){
         marbles[0]->moveForward();
@@ -1049,7 +1031,7 @@ void moveMarbles() {
         marbles[0]->direction = glm::vec3(rotationMat * glm::vec4(marbles[0]->direction,1));
     }
 
-    // TODO #1 move every ball forward along its heading
+    // Move Police
     for (int i = 4; i < marbles.size(); i++){
         glm::vec3 cur_dir = glm::normalize(marbles[i]->direction);
         glm::vec3 target_head = glm::normalize(marbles[0]->location - marbles[i]->location);
@@ -1077,8 +1059,7 @@ void moveMarbles() {
 }
 
 void collideMarblesWithWall() {
-    // TODO #2 checking if any ball passes beyond any wall
-    // Player Falls
+    // Player collides with Temple
     for (int i=0; i< numMarbles; i++){
         if  (abs(marbles[i]->location.x) < templeX && abs(marbles[i]->location.z) < templeZ){
             if (0 > marbles[i]->location.z && marbles[i]->location.z > -templeZ){
@@ -1099,7 +1080,8 @@ void collideMarblesWithWall() {
             }
         }
     }
-    
+
+    // Player Goes over edge
     for (int i = 0; i < numMarbles; i++){
         if (marbles[i]->location.z < -groundSize
                 || marbles[i]->location.z > groundSize
@@ -1120,14 +1102,6 @@ void collideMarblesWithWall() {
 }
 
 void collideMarblesWithEachother() {
-    // TODO #3
-    // check for interball collisions
-    // warning this isn't perfect...balls can get caught and
-    // continually bounce back-and-forth in place off
-    // each other
-    //
-
-
     // Collide Hero
     for (int i = 1; i < numMarbles; i++){
         float dist = glm::distance(
@@ -1138,8 +1112,8 @@ void collideMarblesWithEachother() {
                                     marbles[0]->radius + marbles[0]->location.y,
                                     marbles[0]->location.z));
         if( dist < marbles[i]->radius + marbles[0]->radius){
-            //Collect Beers
             if (i < 4){
+                //Collect Beers
                 beers++;
                 b_distance+=b_dist_inc;
                 alpha *= alpha_ratio;
@@ -1171,6 +1145,7 @@ void collideMarblesWithEachother() {
                 }
             }
             else {
+                // Death
                 marbles[0]->direction.y = -1;
             }
         }
@@ -1236,7 +1211,7 @@ int main( int argc, char *argv[] ) {
     setupTextures();                                    // load all textures into memory
     setupFramebuffer();
     populateMarbles();                                // generate marbles
-	CSCI441::setVertexAttributeLocations(vpos_light_attrib_location);
+    CSCI441::setVertexAttributeLocations(vpos_light_attrib_location);
     convertSphericalToCartesian();        // set up our camera position
 
     CSCI441::drawSolidSphere( 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
@@ -1249,75 +1224,70 @@ int main( int argc, char *argv[] ) {
     //    window will display once and then the program exits.
     double last_update  = glfwGetTime();
     while( !glfwWindowShouldClose(window) ) {    // check if the window was instructed to be closed
-		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glViewport(0, 0, framebufferWidth, framebufferHeight);
-		glClear(GL_COLOR_BUFFER_BIT |
-		GL_DEPTH_BUFFER_BIT);    // clear the current color contents and depth buffer in the framebuffer
+        glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glViewport(0, 0, framebufferWidth, framebufferHeight);
+        glClear(GL_COLOR_BUFFER_BIT |
+        GL_DEPTH_BUFFER_BIT);    // clear the current color contents and depth buffer in the framebuffer
 
-		// set the projection matrix based on the window size
-		// use a perspective projection that ranges
-		// with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
-		glm::mat4 projectionMatrix = glm::perspective(45.0f, framebufferWidth / (float)framebufferHeight, 0.001f, 10000.0f);
+        // set the projection matrix based on the window size
+        // use a perspective projection that ranges
+        // with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
+        glm::mat4 projectionMatrix = glm::perspective(45.0f, framebufferWidth / (float)framebufferHeight, 0.001f, 10000.0f);
 
-		//postprocessingShaderProgram->useProgram();
-		// set up our look at matrix to position our camera
-		// Camera looks at Marble
-		lookAtPoint = marbles[0]->location;
-		convertSphericalToCartesian();
+        //postprocessingShaderProgram->useProgram();
+        // set up our look at matrix to position our camera
+        // Camera looks at Marble
+        lookAtPoint = marbles[0]->location;
+        convertSphericalToCartesian();
                 glm::mat4 viewMatrix = glm::lookAt(eyePoint, lookAtPoint, upVector);
-		/*
-                collideMarblesWithWall();
-		collideMarblesWithEachother();
-		moveMarbles();*/
-		// pass our view and projection matrices
+        // pass our view and projection matrices
         if (glfwGetTime() - last_update > 0.016) {
             last_update = glfwGetTime();
             collideMarblesWithWall();
             collideMarblesWithEachother();
             moveMarbles();
         }
-		renderScene(viewMatrix, projectionMatrix);
+        renderScene(viewMatrix, projectionMatrix);
 
-		glFlush();
-		/////////////////////////////
-		// SECOND PASS
-		/////////////////////////////
-		// TODO #3
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		// Show it all on the screen now!
-		glViewport(0, 0, windowWidth, windowHeight);
-		glClear(GL_COLOR_BUFFER_BIT |
-		GL_DEPTH_BUFFER_BIT);    // clear the current color contents and depth buffer in the framebuffer
-		postprocessingShaderProgram->useProgram();
-		projectionMatrix = glm::ortho(-1, 1, -1, 1);
-		glUniformMatrix4fv(uniform_post_proj_loc, 1, GL_FALSE, &projectionMatrix[0][0]);
-		sys_time += 0.01;
+        glFlush();
+        /////////////////////////////
+        // SECOND PASS
+        /////////////////////////////
+        // TODO #3
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // Show it all on the screen now!
+        glViewport(0, 0, windowWidth, windowHeight);
+        glClear(GL_COLOR_BUFFER_BIT |
+        GL_DEPTH_BUFFER_BIT);    // clear the current color contents and depth buffer in the framebuffer
+        postprocessingShaderProgram->useProgram();
+        projectionMatrix = glm::ortho(-1, 1, -1, 1);
+        glUniformMatrix4fv(uniform_post_proj_loc, 1, GL_FALSE, &projectionMatrix[0][0]);
+        sys_time += 0.01;
                 glUniform1f(uniform_post_time_loc, sys_time);
                 glUniform1f(uniform_post_dist_loc, b_distance);
                 glUniform1f(uniform_post_a_loc, alpha);
                 glBindTexture(GL_TEXTURE_2D, framebufferTextureHandle);
-		glBindVertexArray(texturedQuadVAO);
-		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
+        glBindVertexArray(texturedQuadVAO);
+        glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *)0);
 
-		// Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
+        // Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
         // when using a Retina display the actual window can be larger than the requested window.  Therefore
         // query what the actual size of the window we are rendering to is.
         glfwGetFramebufferSize( window, &windowWidth, &windowHeight );
 
         // update the viewport - tell OpenGL we want to render to the whole window
         glViewport( 0, 0, windowWidth, windowHeight );
-        
         glfwSwapBuffers(window);// flush the OpenGL commands and make sure they get rendered!
         glfwPollEvents();                // check for any events and signal to redraw screen
 
         // THIS IS WHERE THE MAGICAL MAGIC HAPPENS!  Move everything
-        if (glfwGetTime() - last_update > 0.016) {
-            last_update -= 0.016;
+        if (glfwGetTime() - last_update > 0.024) {
+            last_update -= 0.024;
             collideMarblesWithWall();
             collideMarblesWithEachother();
             moveMarbles();
-			setLights();
+            setLights();
         }
         // hack to make the window work on the mac without manually dragging
         if (! movedWindow) {
