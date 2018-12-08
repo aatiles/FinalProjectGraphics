@@ -30,6 +30,9 @@
 
 #include <vector>                    // for vector
 
+#include <CSCI441/modelLoader3.hpp> // to load in OBJ models
+#include <CSCI441/OpenGLUtils3.hpp> // to print info about OpenGL
+
 #include <CSCI441/objects3.hpp>
 #include <CSCI441/ShaderProgram3.hpp>
 #include <CSCI441/TextureUtils.hpp>
@@ -57,8 +60,9 @@ glm::vec3 cameraAngles( 1.82f, 2.01f, 25.0f );
 glm::vec3 eyePoint(   5.0f, 5.0f, 5.0f );
 glm::vec3 lookAtPoint( 0.0f,  0.0f,  0.0f );
 glm::vec3 upVector(    0.0f,  1.0f,  0.0f );
+glm::vec3 lightPos(10.0f, 10.0f, 10.0f);
 float cameraDis = 0.5;
-
+int objectIndex = 2;
 
 // Platform Variables
 struct VertexTextured {
@@ -122,6 +126,15 @@ int turnRight = 0;
 float speedRatio = 0.3;
 float speedIncrease = 0.1;
 
+// For model
+CSCI441::ShaderProgram *lightingProgramHandle = NULL;
+GLint mvp_lights_location = -1;
+GLint vpos_light_attrib_location = -1;
+GLint lightPosUniLoc;
+GLint normalAttLoc;
+GLint viewUniformLoc;
+GLint modelUniLoc;
+CSCI441::ModelLoader* model = NULL;
 // System Time
 float sys_time = 0;
 
@@ -426,6 +439,20 @@ void setupTextures() {
 }
 
 void setupShaders() {
+	//Model Shading
+	lightingProgramHandle = new CSCI441::ShaderProgram("shaders/customShader.v.glsl", "shaders/customShader.f.glsl");
+	mvp_lights_location = lightingProgramHandle->getUniformLocation( "mvpMatrix");
+	if (mvp_lights_location < 0)
+		printf("[ERROR]: mvp_lights_location is negative\n");
+	vpos_light_attrib_location = lightingProgramHandle->getAttributeLocation("vPosition");
+	if (vpos_light_attrib_location < 0)
+		printf("[ERROR]: vpos_light_attrib_location is negative\n");
+	//Lighting things
+	lightPosUniLoc = lightingProgramHandle -> getUniformLocation("lightPos");
+	modelUniLoc = lightingProgramHandle -> getUniformLocation( "model");
+	normalAttLoc = lightingProgramHandle -> getAttributeLocation("aNormal");
+	viewUniformLoc = lightingProgramHandle->getUniformLocation("viewPos");
+
     textureShaderProgram = new CSCI441::ShaderProgram( "shaders/textureShader.v.glsl", "shaders/textureShader.f.glsl" );
     uniform_modelMtx_loc         = textureShaderProgram->getUniformLocation( "modelMtx" );
     uniform_viewProjetionMtx_loc = textureShaderProgram->getUniformLocation( "viewProjectionMtx" );
@@ -456,7 +483,9 @@ void setupShaders() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void setupBuffers() {
-
+	model = new CSCI441::ModelLoader();
+	CSCI441::ModelLoader::enableAutoGenerateNormals();
+	model->loadModelFile("models/temple.obj");
     //////////////////////////////////////////
     //
     // PLATFORM
@@ -693,7 +722,11 @@ CSCI441::FramebufferUtils::printFramebufferInfo(GL_FRAMEBUFFER, fbo);
 }
 */
 
+void setLights() {
+	glm::vec3 beerLoc = marbles[1]->location;
+	lightPos = glm::vec3(beerLoc.x, 10, beerLoc.z);
 
+}
 void populateMarbles() {
     srand( time(NULL) );
     float rangeX = groundSize*2;
@@ -823,6 +856,20 @@ void moveRope(){
 }
 
 void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
+	// stores our model matrix
+	glm::mat4 modelMtx;
+	//glEnable(GL_TEXTURE_2D);					// enable 2D texturing
+	// use our shader program
+	// precompute our MVP CPU side so it only needs to be computed once
+	glm::mat4 mvpMtx = projectionMatrix * viewMatrix * modelMtx;
+
+	lightingProgramHandle->useProgram();
+	glUniformMatrix4fv(mvp_lights_location, 1, GL_FALSE, &mvpMtx[0][0]);
+	glUniformMatrix4fv(modelUniLoc, 1, GL_FALSE, &modelMtx[0][0]);
+	glUniform3fv(lightPosUniLoc, 1, &lightPos[0]);
+	glUniform3fv(viewUniformLoc, 1, &eyePoint[0]);
+	model->draw(vpos_light_attrib_location, normalAttLoc);
+
     CSCI441::setVertexAttributeLocations( attrib_vPos_loc, -1, attrib_vTextureCoord_loc );
     // Draw Scenery
     textureShaderProgram->useProgram();
@@ -876,7 +923,7 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
     // Trees
     CSCI441::setVertexAttributeLocations( vpos_tree_attrib_location );
   // stores our model matrix
-  glm::mat4 modelMtx = glm::mat4(1.0,0.0,0.0,0.0,
+  modelMtx = glm::mat4(1.0,0.0,0.0,0.0,
                  0.0,1.0,0.0,0.0,
                  0.0,0.0,1.0,0.0,
                  0.0,0.0,0.0,1.0);
@@ -1083,7 +1130,7 @@ int main( int argc, char *argv[] ) {
     setupBuffers();                                        // load all our VAOs and VBOs into memory
     setupTextures();                                    // load all textures into memory
     populateMarbles();                                // generate marbles
-
+	CSCI441::setVertexAttributeLocations(vpos_light_attrib_location);
     convertSphericalToCartesian();        // set up our camera position
 
     CSCI441::drawSolidSphere( 1, 16, 16 );    // strange hack I need to make spheres draw - don't have time to investigate why..it's a bug with my library
@@ -1162,10 +1209,11 @@ int main( int argc, char *argv[] ) {
 
         // THIS IS WHERE THE MAGICAL MAGIC HAPPENS!  Move everything
         if (glfwGetTime() - last_update > 0.016) {
-            last_update = glfwGetTime();
+            last_update -= 0.016;
             collideMarblesWithWall();
             collideMarblesWithEachother();
             moveMarbles();
+			setLights();
         }
         // hack to make the window work on the mac without manually dragging
         if (! movedWindow) {
