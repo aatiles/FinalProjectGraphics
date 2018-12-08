@@ -127,7 +127,7 @@ int goingForward = 0;
 int goingBackward = 0;
 int turnLeft = 0;
 int turnRight = 0;
-float speedRatio = 0.3;
+float speedRatio = 0.01;
 float speedIncrease = 0.1;
 
 // For model
