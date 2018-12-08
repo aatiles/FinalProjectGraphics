@@ -127,6 +127,7 @@ int goingForward = 0;           // State of W Key
 int goingBackward = 0;          // State of S Key
 int turnLeft = 0;               // State of A Key
 int turnRight = 0;              // State of D Key
+int lookBack = 0;               // State of F Key
 float speedRatio = 0.01;        // Speed at which the cops start out
 float speedIncrease = 0.2;      // Speed at which cops speed increase. Logistic growth.
 
@@ -185,9 +186,18 @@ GLuint treeTextureHandle;
 ////////////////////////////////////////////////////////////////////////////////
 void convertSphericalToCartesian() {
     // Define eye point based on camera distance and camera angle. 
+    if (lookBack == GLFW_PRESS || lookBack == GLFW_REPEAT) {
+        eyePoint.x = lookAtPoint.x + cameraDis * sinf( cameraAngles.x - M_PI ) * sinf( cameraAngles.y );
+        eyePoint.y = lookAtPoint.y + cameraDis * -cosf( cameraAngles.y );
+        eyePoint.z = lookAtPoint.z + cameraDis * -cosf( cameraAngles.x - M_PI) * sinf( cameraAngles.y );
+    }
+    else {
     eyePoint.x = lookAtPoint.x + cameraDis * sinf( cameraAngles.x ) * sinf( cameraAngles.y );
     eyePoint.y = lookAtPoint.y + cameraDis * -cosf( cameraAngles.y );
-    eyePoint.z = lookAtPoint.z + cameraDis * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );}
+    eyePoint.z = lookAtPoint.z + cameraDis * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );
+    }
+
+}
 
 float randRange(float min, float max){
     // Return a random float in a given range
@@ -250,6 +260,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
             break;
         case GLFW_KEY_LEFT_CONTROL: ctrlPress = action;
             break;
+        case GLFW_KEY_F: lookBack = action;
     }
 }
 
@@ -1283,7 +1294,7 @@ int main( int argc, char *argv[] ) {
         glfwPollEvents();                // check for any events and signal to redraw screen
 
         // THIS IS WHERE THE MAGICAL MAGIC HAPPENS!  Move everything
-        if (glfwGetTime() - last_update > 0.012) {
+        if (glfwGetTime() - last_update > 0.016) {
             last_update = glfwGetTime();
             collideMarblesWithWall();
             collideMarblesWithEachother();
