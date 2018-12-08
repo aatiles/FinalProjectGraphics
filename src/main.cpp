@@ -62,6 +62,8 @@ glm::vec3 eyePoint(   5.0f, 5.0f, 5.0f );
 glm::vec3 lookAtPoint( 0.0f,  0.0f,  0.0f );
 glm::vec3 upVector(    0.0f,  1.0f,  0.0f );
 glm::vec3 lightPos(10.0f, 10.0f, 10.0f);
+glm::vec3 lightPos1(10.0f, 10.0f, 10.0f);
+glm::vec3 lightPos2(10.0f, 10.0f, 10.0f);
 float cameraDis = 30;
 int ctrlPress = 0; 
 
@@ -132,6 +134,8 @@ CSCI441::ShaderProgram *lightingProgramHandle = NULL;
 GLint mvp_lights_location = -1;
 GLint vpos_light_attrib_location = -1;
 GLint lightPosUniLoc;
+GLint lightPos1UniLoc;
+GLint lightPos2UniLoc;
 GLint normalAttLoc;
 GLint viewUniformLoc;
 GLint modelUniLoc;
@@ -467,6 +471,8 @@ void setupShaders() {
 		printf("[ERROR]: vpos_light_attrib_location is negative\n");
 	//Lighting things
 	lightPosUniLoc = lightingProgramHandle -> getUniformLocation("lightPos");
+	lightPos1UniLoc = lightingProgramHandle->getUniformLocation("lightPos1");
+	lightPos2UniLoc = lightingProgramHandle->getUniformLocation("lightPos2");
 	modelUniLoc = lightingProgramHandle -> getUniformLocation( "model");
 	normalAttLoc = lightingProgramHandle -> getAttributeLocation("aNormal");
 	viewUniformLoc = lightingProgramHandle->getUniformLocation("viewPos");
@@ -784,8 +790,11 @@ CSCI441::FramebufferUtils::printFramebufferInfo(GL_FRAMEBUFFER, fbo);
 
 void setLights() {
 	glm::vec3 beerLoc = marbles[1]->location;
+	glm::vec3 beerLoc1 = marbles[2]->location;
+	glm::vec3 beerLoc2 = marbles[3]->location;
 	lightPos = glm::vec3(beerLoc.x, 10, beerLoc.z);
-
+	lightPos1 = glm::vec3(beerLoc1.x, 10, beerLoc1.z);
+	lightPos2 = glm::vec3(beerLoc2.x, 10, beerLoc2.z);
 }
 void populateMarbles() {
     srand( time(NULL) );
@@ -927,6 +936,8 @@ void renderScene( glm::mat4 viewMatrix, glm::mat4 projectionMatrix ) {
 	glUniformMatrix4fv(mvp_lights_location, 1, GL_FALSE, &mvpMtx[0][0]);
 	glUniformMatrix4fv(modelUniLoc, 1, GL_FALSE, &modelMtx[0][0]);
 	glUniform3fv(lightPosUniLoc, 1, &lightPos[0]);
+	glUniform3fv(lightPos1UniLoc, 1, &lightPos1[0]);
+	glUniform3fv(lightPos2UniLoc, 1, &lightPos2[0]);
 	glUniform3fv(viewUniformLoc, 1, &eyePoint[0]);
 	model->draw(vpos_light_attrib_location, normalAttLoc);
 

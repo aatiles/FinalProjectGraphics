@@ -8,6 +8,8 @@
 
 //in vec3 theColor;
 uniform vec3 lightPos;
+uniform vec3 lightPos1;
+uniform vec3 lightPos2;
 uniform vec3 viewPos;
 in vec3 FragPos;
 out vec4 fragColorOut;
@@ -19,8 +21,10 @@ void main() {
     //******* Final Color Calculations ********
     //*****************************************
    
+  
+   //FIRST LIGHT
     float specularStrength = 0.5;
-	vec3 lightColor = vec3(1.0, 1.0, 1.0);
+	vec3 lightColor = vec3(1.0, 0.0, 0.0);
 	vec3 norm = normalize(Normal);
 	vec3 lightDir = normalize(lightPos - FragPos);
 	
@@ -35,7 +39,29 @@ void main() {
 	vec3 result = (ambient + diffuse + specular);
 	//result = vec3(1.0, 1.0, 1.0) * (dot(normalize(Normal), viewPos-FragPos) + 0.3);
 
-	fragColorOut = vec4(result, 1.0);
+	//SECOND LIGHT
+	lightColor = vec3(0.0, 0.0, 1.0);
+	lightDir = normalize(lightPos1 - FragPos);
+	diff = max(dot(norm, lightDir), 0.0);
+	diffuse = diff * lightColor;
+	viewDir = normalize(viewPos - FragPos);
+	reflectDir = reflect(-lightDir, norm);
+	specular = pow(max(dot(viewDir, reflectDir),0.0), 32)*vec3(1.0, 1.0, 1.0);
+	ambient = ambientStrength * lightColor;
+	vec3 result1 = (ambient + diffuse + specular);
+	
+	//THIRD LIGHT
+	lightColor = vec3(0.0, 1.0, 0.0);
+	lightDir = normalize(lightPos2 - FragPos);
+	diff = max(dot(norm, lightDir), 0.0);
+	diffuse = diff * lightColor;
+	viewDir = normalize(viewPos - FragPos);
+	reflectDir = reflect(-lightDir, norm);
+	specular = pow(max(dot(viewDir, reflectDir),0.0), 32)*vec3(1.0, 1.0, 1.0);
+	ambient = ambientStrength * lightColor;
+	vec3 result2 = (ambient + diffuse + specular);
+	
+	fragColorOut = vec4((result+result1+result2)/3, 1.0);
 
 	//fragColorOut = vec4(1.0 , 1.0 ,1.0 ,1.0 );
 	
