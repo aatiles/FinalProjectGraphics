@@ -136,6 +136,8 @@ GLint normalAttLoc;
 GLint viewUniformLoc;
 GLint modelUniLoc;
 CSCI441::ModelLoader* model = NULL;
+float templeX = 7;
+float templeZ = 5;
 
 //FBO Stuff
 GLuint fbo;
@@ -528,7 +530,7 @@ void setupBuffers() {
     //
     // PLATFORM
 
-    GLfloat platformSize = groundSize + marbleRadius;
+    GLfloat platformSize = groundSize;
 
     VertexTextured platformVertices[4] = {
             { -platformSize, 0.0f, -platformSize,   0.0f,  0.0f }, // 0 - BL
@@ -733,6 +735,11 @@ void setupBuffers() {
         Vertex v = {    randRange(-groundSize, groundSize),
                         0,
                         randRange(-groundSize, groundSize) };
+        while (abs(v.x) < 1.5*templeX and abs(v.z) < 1.5*templeZ) {
+            v = {   randRange(-groundSize, groundSize),
+                    0,
+                    randRange(-groundSize, groundSize) };
+        }
         points[i] = v;
     }
 
@@ -1059,6 +1066,27 @@ void moveMarbles() {
 void collideMarblesWithWall() {
     // TODO #2 checking if any ball passes beyond any wall
     // Player Falls
+    for (int i=0; i< numMarbles; i++){
+        if  (abs(marbles[i]->location.x) < templeX && abs(marbles[i]->location.z) < templeZ){
+            if (0 > marbles[i]->location.z && marbles[i]->location.z > -templeZ){
+                marbles[i]->location.z = -templeZ;
+                marbles[i]->direction = collide(marbles[i]->direction, glm::vec3(0,0,1));
+            }
+            if (0 < marbles[i]->location.z && marbles[i]->location.z < templeZ){
+                marbles[i]->location.z =  templeZ;
+                marbles[i]->direction = collide(marbles[i]->direction, glm::vec3(0,0,-1));
+            }
+            if (0 > marbles[i]->location.x && marbles[i]->location.x > -templeX){
+                marbles[i]->location.x = -templeX;
+                marbles[i]->direction = collide(marbles[i]->direction, glm::vec3(1,0,0));
+            }
+            if (0 < marbles[i]->location.x && marbles[i]->location.x < templeX){
+                marbles[i]->location.x =  templeX;
+                marbles[i]->direction = collide(marbles[i]->direction, glm::vec3(-1,0,0));
+            }
+        }
+    }
+    
     for (int i = 0; i < numMarbles; i++){
         if (marbles[i]->location.z < -groundSize
                 || marbles[i]->location.z > groundSize
@@ -1106,7 +1134,12 @@ void collideMarblesWithEachother() {
                                                     0,
                                                     randRange(-groundSize, groundSize));
 
-                
+                while (abs(marbles[i]->location.x) < templeX || abs(marbles[i]->location.z) < templeZ){
+                    marbles[i]->location = glm::vec3(   randRange(-groundSize, groundSize),
+                                                        0,
+                                                        randRange(-groundSize, groundSize));
+
+                }
                 // Spawn officer
                 if ( randRange(0,2) < 1 || numMarbles > 6){
                     glm::vec3 loc = marbles[i]->location;
@@ -1121,7 +1154,6 @@ void collideMarblesWithEachother() {
                                             marbleRadius );
                     marbles.push_back( m );
                     numMarbles++;
-                    
                     printf("Level %d Unocked at %f %f %f\n", numMarbles - 4, m->location.x, m->location.y, m->location.z);
                 }
             }
