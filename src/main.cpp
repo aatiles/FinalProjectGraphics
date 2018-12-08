@@ -380,7 +380,7 @@ GLFWwindow* setupGLFW() {
     glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 3 );        // request OpenGL 3.3 context
 
     // create a window for a given size, with a given title
-    GLFWwindow *window = glfwCreateWindow(640, 480, "Lab11: Collision Detection", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(640, 480, "OreKart Pull", NULL, NULL);
     if( !window ) {                        // if the window could not be created, NULL is returned
         fprintf( stderr, "[ERROR]: GLFW Window could not be created\n" );
         glfwTerminate();
