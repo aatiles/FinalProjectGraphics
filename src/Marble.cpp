@@ -12,17 +12,17 @@ Marble::Marble() {
     location = glm::vec3(0,0,0);
     direction = glm::vec3(1,0,0);
     _rotation = 0;
-    _color = glm::vec3(rand() * 100 % 50 / 100.0 + 0.5, rand() * 100 % 50 / 100.0 + 0.5, rand() * 100 % 50 / 100.0 + 0.5);
+    _color = glm::vec3(1,1,1);
 }
 
 Marble::Marble( glm::vec3 l, glm::vec3 d, double r ) : radius(r), location(l), direction(d) {
     _rotation = 0;
-    _color = glm::vec3(rand() * 100 % 50 / 100.0 + 0.5, rand() * 100 % 50 / 100.0 + 0.5, rand() * 100 % 50 / 100.0 + 0.5);
+    _color = glm::vec3(1,1,1);
     type = 0;
 }
 Marble::Marble( glm::vec3 l, glm::vec3 d, double r, int t) : radius(r), location(l), direction(d) {
     _rotation = 0;
-    _color = glm::vec3(rand() * 100 % 50 / 100.0 + 0.5, rand() * 100 % 50 / 100.0 + 0.5, rand() * 100 % 50 / 100.0 + 0.5);
+    _color = glm::vec3(1,1,1);
     type = t;
 }
 
