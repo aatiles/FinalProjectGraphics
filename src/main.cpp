@@ -55,7 +55,8 @@ glm::vec3 cameraAngles( 1.82f, 2.01f, 25.0f );
 glm::vec3 eyePoint(   5.0f, 5.0f, 5.0f );
 glm::vec3 lookAtPoint( 0.0f,  0.0f,  0.0f );
 glm::vec3 upVector(    0.0f,  1.0f,  0.0f );
-float cameraDis = 0.5;
+float cameraDis = 30;
+int ctrlPress = 0; 
 
 
 // Platform Variables
@@ -87,7 +88,7 @@ GLint attrib_m_vPos_loc, attrib_m_vTextureCoord_loc;
 
 // Marble Variables
 std::vector< Marble* > marbles;
-GLfloat marbleRadius = 0.3;
+GLfloat marbleRadius = 4;
 GLint numMarbles = 4;
 float bump = 0.1;
 glm::vec3 marbleStart = glm::vec3(8,0,8);
@@ -163,10 +164,9 @@ float sys_time = 0;
 //
 ////////////////////////////////////////////////////////////////////////////////
 void convertSphericalToCartesian() {
-    eyePoint.x = lookAtPoint.x + cameraAngles.z * sinf( cameraAngles.x ) * sinf( cameraAngles.y );
-    eyePoint.y = lookAtPoint.y + cameraAngles.z * -cosf( cameraAngles.y );
-    eyePoint.z = lookAtPoint.z + cameraAngles.z * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );
-}
+    eyePoint.x = lookAtPoint.x + cameraDis * sinf( cameraAngles.x ) * sinf( cameraAngles.y );
+    eyePoint.y = lookAtPoint.y + cameraDis * -cosf( cameraAngles.y );
+    eyePoint.z = lookAtPoint.z + cameraDis * -cosf( cameraAngles.x ) * sinf( cameraAngles.y );}
 
 float randRange(float min, float max){
     return rand()/(float) RAND_MAX * (max-min) + min;
@@ -226,6 +226,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
             break;
         case GLFW_KEY_D: turnRight      = action;
             break;
+        case GLFW_KEY_LEFT_CONTROL: ctrlPress = action;
+            break;
     }
 }
 
@@ -268,18 +270,14 @@ static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
                     mousePosition.x = xpos;
                     mousePosition.y = ypos;
                 } else {
-                    if( !controlDown ) {
+                    if( ctrlPress == 0) {
                         cameraAngles.x += (xpos - mousePosition.x)*0.005f;
                         cameraAngles.y += (ypos - mousePosition.y)*0.005f;
 
                         if( cameraAngles.y < 0 ) cameraAngles.y = 0.0f + 0.001f;
                         if( cameraAngles.y >= M_PI ) cameraAngles.y = M_PI - 0.001f;
                     } else {
-                        double totChgSq = (xpos - mousePosition.x) + (ypos - mousePosition.y);
-                        cameraAngles.z += totChgSq*0.01f;
-
-                        if( cameraAngles.z <= 2.0f ) cameraAngles.z = 2.0f;
-                        if( cameraAngles.z >= 30.0f ) cameraAngles.z = 30.0f;
+                        cameraDis -= (mousePosition.y - ypos)/10;
                     }
                     convertSphericalToCartesian();
 
