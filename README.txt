@@ -1,13 +1,12 @@
-\\TODO Write readme
-Your Name / email
-Guild Name / Guild Members
-Assignment Number / Project Title
-A brief, high level description of what the program is / does
-A usage section, explaining how to run the program, which keys perform which actions, etc.
-Instructions on compiling your code
-Notes about bugs, implementation details, etc. if necessary
-NEW: A description of the file format that your program reads as input
-NEW: A rough distribution of responsibilities / contributions of each student
-How long did this assignment take you?
-How much did the lab help you for this assignment? 1-10 (1 - did not help at all, 10 - this was exactly the same as the lab)
-How fun was this assignment? 1-10 (1 - discontinue this assignment, 10 - I wish I had more time to make it even better)
+Billy Brickner, Coleman Hoyt, Amelia Atiles
+
+Final Project
+-The player must collect cans while not getting caught by the police; the more beers collected the more blurry the screen becomes.
+-You run the exicutable in command line; Move the hero by using W and S; A and D to rotate the hero.
+-Type make into the command line to compile the code.
+-There is a small bug with the trees if you move the camera in a certian way.
+-We do not have a file that is read in as input
+-Billy: Billboarding, git conflicts, implementing textures, and rope physics   Amelia: Lights, FragementBuffer, and finding textures   Coleman: Cart heirarchy, fixed police rotation, and made sure the program worked on different platforms (lab and personal Apple computer)
+-32 man hours to complete the project.
+-8 there were some specific things that were not in the lab that were challenging.
+-7 because it required a lot of corrdination with members when we had other group projects and finals to study for.
