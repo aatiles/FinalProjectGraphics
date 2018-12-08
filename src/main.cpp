@@ -735,9 +735,10 @@ void setupBuffers() {
                         0,
                         randRange(-groundSize, groundSize) };
         while (abs(v.x) < 1.5*templeX and abs(v.z) < 1.5*templeZ) {
-            v = {   randRange(-groundSize, groundSize),
+            Vertex vnew = {   randRange(-groundSize, groundSize),
                     0,
                     randRange(-groundSize, groundSize) };
+            v = vnew;
         }
         points[i] = v;
     }
@@ -1282,8 +1283,8 @@ int main( int argc, char *argv[] ) {
         glfwPollEvents();                // check for any events and signal to redraw screen
 
         // THIS IS WHERE THE MAGICAL MAGIC HAPPENS!  Move everything
-        if (glfwGetTime() - last_update > 0.024) {
-            last_update -= 0.024;
+        if (glfwGetTime() - last_update > 0.012) {
+            last_update = glfwGetTime();
             collideMarblesWithWall();
             collideMarblesWithEachother();
             moveMarbles();
