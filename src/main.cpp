@@ -80,7 +80,7 @@ GLfloat groundSize = 50;    // Size of ground
 GLuint skyboxVAOds[6];                      // all of our skybox VAOs
 GLuint skyboxHandles[6];                    // all of our skybox handles
 float skyBoxSize = 300;     // Size of Skybox
-float downShift = 250;
+float downShift = 200;
 // Shader Programs
 CSCI441::ShaderProgram* textureShaderProgram = NULL;
 GLint uniform_modelMtx_loc, uniform_viewProjetionMtx_loc, uniform_tex_loc, uniform_color_loc;
